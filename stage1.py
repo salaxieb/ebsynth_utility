@@ -223,8 +223,12 @@ def ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_mas
             create_mask_clipseg(frame_path, frame_mask_path, clipseg_mask_prompt, clipseg_exclude_prompt, clipseg_mask_threshold, clipseg_mask_blur_size, clipseg_mask_blur_size2)
             create_and_mask(tb_tmp_path,frame_mask_path,frame_mask_path)
 
+        # rename masks if end with *_map.png
+        for frame_mask in frame_mask_path.glob('*_map.png'):
+            frame_mask.rename((frame_mask.parent / frame_mask.stem[:-4]).with_suffix('.png'))
 
         dbg.print("mask created")
+    
     
     dbg.print("")
     dbg.print("completed.")

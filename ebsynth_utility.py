@@ -76,7 +76,7 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         frame_mask_path = ""
     
 
-    project_args = [project_dir, original_movie_path, frame_path, frame_mask_path, org_key_path, img2img_key_path, img2img_upscale_key_path, back_org_key_path, back_img2img_key_path, back_img2img_upscale_key_path]
+    project_args = [project_dir, original_movie_path, frame_path, frame_mask_path, org_key_path, img2img_key_path, img2img_upscale_key_path, back_path, back_mask_path, back_org_key_path, back_img2img_key_path, back_img2img_upscale_key_path]
 
 
     if stage_index == 0:
@@ -177,7 +177,11 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return process_end( dbg, "" )
     if stage_index == 8:
-        ebsynth_utility_stage7(dbg, project_args, blend_rate, export_type, is_invert_mask)
+        ebsynth_utility_stage7(dbg, project_dir)
+        ebsynth_utility_stage7(dbg, back_path)
+
+    if stage_index == 9:
+        ebsynth_utility_stage7_5(dbg, project_args, blend_rate, export_type, is_invert_mask)
     if stage_index == 9:
         if mask_mode != "Normal":
             dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")

@@ -6,6 +6,7 @@ import time
 
 from sys import byteorder
 import binascii
+from pathlib import Path
 import numpy as np
 
 SYNTHS_PER_PROJECT = 15
@@ -226,6 +227,13 @@ def ebsynth_utility_stage5(dbg, project_dir, frame_path, frame_mask_path, img2im
         synth_list[i]["key"] = key
         synth_list[i]["prev_key"] = prev_key
         prev_key = key
+
+    try:
+        relative_video_dir = str(Path(frame_path).relative_to(Path(project_dir)))
+    except ValueError:
+        # it means that relative path thru parent
+        relative_video_dir = '../' + Path(frame_path).stem
+    relative_mask_dir = str(Path(frame_mask_path).relative_to(Path(project_dir)))
     
     project = {
         "proj_dir" : project_dir,
@@ -233,8 +241,8 @@ def ebsynth_utility_stage5(dbg, project_dir, frame_path, frame_mask_path, img2im
         "number_of_digits" : number_of_digits,
         
         "key_dir" : "img2img_upscale_key" if no_upscale == False else "img2img_key",
-        "video_dir" : str(frame_path),#"video_frame" if is_invert_mask == False else "../video_frame",
-        "mask_dir" : str(frame_mask_path),#"video_mask" if is_invert_mask == False else "inv_video_mask",
+        "video_dir" : relative_video_dir,
+        "mask_dir" : relative_mask_dir,
         "key_weight" : 1.0,
         "video_weight" : 4.0,
         "mask_weight" : 1.0,

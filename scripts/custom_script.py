@@ -15,11 +15,12 @@ from modules import shared,deepbooru,masking
 import cv2
 import copy
 import numpy as np
-from PIL import Image,ImageOps
+from PIL import Image, ImageOps
 import glob
 import requests
 import json
 import re
+from pathlib import Path
 from extensions.ebsynth_utility.calculator import CalcParser,ParseError
 
 def get_my_dir():
@@ -793,7 +794,8 @@ class Script(scripts.Script):
         if mask_mode == "Normal":
             p.inpainting_mask_invert = 0
         elif mask_mode == "Invert":
-            p.inpainting_mask_invert = 1
+            # mask already inverted
+            p.inpainting_mask_invert = 0
         
         if inpaint_area in (0,1):  #"Whole picture","Only masked"
             p.inpaint_full_res = inpaint_area
@@ -900,7 +902,7 @@ class Script(scripts.Script):
         ######################
         # face crop
         face_coords_dict={}
-        for img,mask in zip(imgs,masks):
+        for img, mask in zip(imgs,masks):
             face_detected = False
             if is_facecrop:
                 image = Image.open(img)

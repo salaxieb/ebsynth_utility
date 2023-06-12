@@ -4,6 +4,7 @@ import glob
 import shutil
 import numpy as np
 import math
+from pathlib import Path
 
 #---------------------------------
 # Copied from PySceneDetect
