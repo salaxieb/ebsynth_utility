@@ -7,6 +7,7 @@ from transformers import AutoProcessor, CLIPSegForImageSegmentation
 from PIL import Image
 import torch
 import numpy as np
+from pathlib import Path
 
 
 def resize_img(img, w, h):
@@ -22,7 +23,7 @@ def resize_all_img(path, frame_width, frame_height):
         return
     
     pngs = path.glob("*.png")
-    img = cv2.imread(pngs[0])
+    img = cv2.imread(str(pngs[0]))
     org_h,org_w = img.shape[0],img.shape[1]
 
     if frame_width == -1 and frame_height == -1:
@@ -36,9 +37,9 @@ def resize_all_img(path, frame_width, frame_height):
     print(f"({org_w},{org_h}) resize to ({frame_width},{frame_height})")
 
     for png in pngs:
-        img = cv2.imread(png)
+        img = cv2.imread(str(png))
         img = resize_img(img, frame_width, frame_height)
-        cv2.imwrite(png, img)
+        cv2.imwrite(str(png), img)
 
 def remove_pngs_in_dir(path):
     if not path.is_dir():
@@ -59,10 +60,10 @@ def create_and_mask(mask_dir1, mask_dir2, output_dir):
             print(f"{mask2} not found!!! -> skip")
             continue
 
-        img_1 = cv2.imread(mask1)
-        img_2 = cv2.imread(mask2)
-        img_1 = np.minimum(img_1,img_2)
-        cv2.imwrite(output_dir / mask1.name, img_1)
+        img_1 = cv2.imread(str(mask1))
+        img_2 = cv2.imread(str(mask2))
+        img_1 = np.minimum(img_1, img_2)
+        cv2.imwrite(str(output_dir / mask1.name), img_1)
 
 
 def create_mask_clipseg(input_dir, output_dir, clipseg_mask_prompt, clipseg_exclude_prompt, clipseg_mask_threshold, mask_blur_size, mask_blur_size2):
@@ -132,7 +133,7 @@ def create_mask_clipseg(input_dir, output_dir, clipseg_mask_prompt, clipseg_excl
 
         mask_img = cv2.cvtColor(mask_img, cv2.COLOR_GRAY2RGB)
         save_path = output_dir / img_path.stem
-        cv2.imwrite(save_path, mask_img)
+        cv2.imwrite(str(save_path), mask_img)
 
         print(f"{img_count+1} / {len(imgs)}")
     
@@ -148,17 +149,17 @@ def create_mask_transparent_background(input_dir, output_dir, tb_use_fast_mode, 
     bin_path = Path(venv) / "Scripts"
     bin_path = bin_path / "transparent-background"
 
-    if os.path.isfile(bin_path) or os.path.isfile(bin_path + ".exe"):
-        subprocess.call(bin_path + " --source " + input_dir + " --dest " + output_dir + " --type map" + fast_str + jit_str, shell=True)
+    if bin_path.is_file() or bin_path.with_suffix('.exe').is_file():
+        subprocess.call(str(bin_path) + " --source " + str(input_dir) + " --dest " + str(output_dir) + " --type map" + fast_str + jit_str, shell=True)
     else:
-        subprocess.call("transparent-background --source " + input_dir + " --dest " + output_dir + " --type map" + fast_str + jit_str, shell=True)
+        subprocess.call("transparent-background --source " + str(input_dir) + " --dest " + str(output_dir) + " --type map" + fast_str + jit_str, shell=True)
 
     mask_img_paths = output_dir.glob("*.png") 
     
     for mask_path in mask_img_paths:
-        img = cv2.imread(mask_path)
+        img = cv2.imread(str(mask_path))
         img[img < int( 255 * st1_mask_threshold )] = 0
-        cv2.imwrite(mask_path, img)
+        cv2.imwrite(str(mask_path), img)
 
     p = re.compile(r'([0-9]+)_[a-z]*\.png')
 
@@ -199,7 +200,7 @@ def ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_mas
 
         png_path = os.path.join(frame_path , "%05d.png")
         # ffmpeg.exe -ss 00:00:00  -y -i %1 -qscale 0 -f image2 -c:v png "%05d.png"
-        subprocess.call("ffmpeg -ss 00:00:00  -y -i " + original_movie_path + " -qscale 0 -f image2 -c:v png " + png_path, shell=True)
+        subprocess.call("ffmpeg -ss 00:00:00  -y -i " + str(original_movie_path) + " -qscale 0 -f image2 -c:v png " + str(png_path), shell=True)
 
         dbg.print("frame extracted")
 
@@ -239,14 +240,15 @@ def ebsynth_utility_stage1_invert(dbg, frame_mask_path, inv_mask_path):
         dbg.print("Do stage 1 with [Ebsynth Utility] Tab -> [configuration] -> [etc]-> [Mask Mode] = Normal setting first")
         return
 
-    os.makedirs(inv_mask_path, exist_ok=True)
+    inv_mask_path = Path(inv_mask_path)
+    inv_mask_path.mkdir(exist_ok=True)
 
-    mask_imgs = glob.glob( os.path.join(frame_mask_path, "*.png") )
+    mask_imgs = Path(frame_mask_path).glob("*.png")
     
     for m in mask_imgs:
-        img = cv2.imread(m)
+        img = cv2.imread(str(m))
         inv = cv2.bitwise_not(img)
-        cv2.imwrite(inv_mask_path / m.name, inv)
+        cv2.imwrite(str(inv_mask_path / m.name), inv)
 
     dbg.print("")
     dbg.print("completed.")

@@ -60,13 +60,13 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
 
     # if is_invert_mask:
     back_path = os.path.join(project_dir, "inv")
-    back_mask_path = os.path.join(inv_path, "inv_video_mask")
+    back_mask_path = os.path.join(back_path, "inv_video_mask")
 
-    os.makedirs(inv_path, exist_ok=True)
+    os.makedirs(back_path, exist_ok=True)
 
-    back_org_key_path = os.path.join(inv_path, "video_key")
-    back_img2img_key_path = os.path.join(inv_path, "img2img_key")
-    back_img2img_upscale_key_path = os.path.join(inv_path, "img2img_upscale_key")
+    back_org_key_path = os.path.join(back_path, "video_key")
+    back_img2img_key_path = os.path.join(back_path, "img2img_key")
+    back_img2img_upscale_key_path = os.path.join(back_path, "img2img_upscale_key")
     # else:
     org_key_path = os.path.join(project_dir, "video_key")
     img2img_key_path = os.path.join(project_dir, "img2img_key")
@@ -130,9 +130,6 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         sample_img2img_key = glob.glob( os.path.join(img2img_key_path , "*.png" ) )[0]
         img_height_key, img_width_key, _ = cv2.imread(sample_img2img_key).shape
 
-        if is_invert_mask:
-            project_dir = inv_path
-
         dbg.print("stage 4")
         dbg.print("")
 
@@ -167,7 +164,7 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
     if stage_index == 7:
 
         if is_invert_mask:
-            project_dir = inv_path
+            project_dir = back_path
 
         dbg.print("stage 6")
         dbg.print("")

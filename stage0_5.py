@@ -124,7 +124,11 @@ def ebsynth_utility_stage0_5(dbg, project_args, export_type):
     project_dir, original_movie_path, *args = project_args
     project_dir, original_movie_path = Path(project_dir), Path(original_movie_path)
 
-    subprocess.call(f"ffmpeg -i {str(original_movie_path)} -filter:v fps=10 {str(project_dir / original_movie_path.name)}", shell=True)
+    destination = project_dir / original_movie_path.name
+    if destination.exists():
+        destination.unlink()
+
+    subprocess.call(f"ffmpeg -i {str(original_movie_path)} -filter:v fps=12 {str(project_dir / original_movie_path.name)}", shell=True)
 
     dbg.print(f"new_file_name: {str(project_dir / original_movie_path.name)}")
     dbg.print("completed.")

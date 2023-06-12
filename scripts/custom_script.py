@@ -817,6 +817,8 @@ class Script(scripts.Script):
 
             self.prompts_dir = inv_path
             self.is_invert_mask = True
+
+            frame_mask_path = os.path.join(inv_path, "inv_video_mask")
         else:
             org_key_path = os.path.join(project_dir, "video_key")
             img2img_key_path = os.path.join(project_dir, "img2img_key")
@@ -829,7 +831,7 @@ class Script(scripts.Script):
             self.prompts_dir = project_dir
             self.is_invert_mask = False
 
-        frame_mask_path = os.path.join(project_dir, "video_mask")
+            frame_mask_path = os.path.join(project_dir, "video_mask")
 
         if not use_depth:
             depth_path = None
@@ -856,10 +858,10 @@ class Script(scripts.Script):
 
 
         def get_mask_of_img(img):
-            img_basename = os.path.basename(img)
+            img_basename = Path(img).stem
             
             if mask_mode != "None":
-                mask_path = os.path.join( frame_mask_path , img_basename )
+                mask_path = os.path.join( frame_mask_path , img_basename + '_map.png' )
                 if os.path.isfile( mask_path ):
                     return mask_path
             return ""
