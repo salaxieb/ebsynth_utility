@@ -24,3 +24,6 @@ if not launch.is_installed("color_matcher"):
 
 if not launch.is_installed("pathlib"):
     launch.run_pip("install ""pathlib""", "requirements for Ebsynth Utility")
+
+if not launch.is_installed("natsort"):
+    launch.run_pip("install ""natsort""", "requirements for Ebsynth Utility")

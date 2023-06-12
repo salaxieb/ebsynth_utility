@@ -80,10 +80,11 @@ def trying_to_add_audio(original_movie_path, no_snd_movie_path, output_path, tmp
     
     return False
 
-def ebsynth_utility_stage7(dbg, project_dir):
+def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
 
     dbg.print("stage7")
-    dbg.print("")    
+    dbg.print("")
+    blend_rate = clamp(blend_rate, 0.0, 1.0)
     dbg.print("blend_rate: {}".format(blend_rate))
     
     tmp_dir = os.path.join( project_dir , "crossfade_tmp")
@@ -94,7 +95,7 @@ def ebsynth_utility_stage7(dbg, project_dir):
     
     number_of_digits, out_dirs = search_out_dirs(project_dir, blend_rate)
     
-    if number_of_digits_front == -1:
+    if number_of_digits == -1:
         dbg.print('no out dir')
         return
     
@@ -110,7 +111,12 @@ def ebsynth_utility_stage7(dbg, project_dir):
     
     print(str(start) + " -> " + str(end+1))
     
-    black_img = np.zeros_like(cv2.imread( os.path.join(out_dirs[out_dirs]['path'], str(start).zfill(number_of_digits_front) + ".png") ) )
+    black_img = np.zeros_like(
+        cv2.imread(
+            os.path.join(
+                out_dirs[cur_clip]['path'],
+                str(start).zfill(number_of_digits) + ".png"
+        )))
     
     for i in range(start, end+1):
         

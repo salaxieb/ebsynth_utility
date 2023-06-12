@@ -11,6 +11,7 @@ from extensions.ebsynth_utility.stage1 import ebsynth_utility_stage1,ebsynth_uti
 from extensions.ebsynth_utility.stage2 import ebsynth_utility_stage2
 from extensions.ebsynth_utility.stage5 import ebsynth_utility_stage5
 from extensions.ebsynth_utility.stage7 import ebsynth_utility_stage7
+from extensions.ebsynth_utility.stage7_5 import ebsynth_utility_stage7_5
 from extensions.ebsynth_utility.stage8 import ebsynth_utility_stage8
 from extensions.ebsynth_utility.stage3_5 import ebsynth_utility_stage3_5
 
@@ -177,11 +178,11 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return process_end( dbg, "" )
     if stage_index == 8:
-        ebsynth_utility_stage7(dbg, project_dir)
-        ebsynth_utility_stage7(dbg, back_path)
+        ebsynth_utility_stage7(dbg, project_dir, blend_rate)
+        ebsynth_utility_stage7(dbg, back_path, blend_rate)
 
     if stage_index == 9:
-        ebsynth_utility_stage7_5(dbg, project_args, blend_rate, export_type, is_invert_mask)
+        ebsynth_utility_stage7_5(dbg, project_dir, original_movie_path, frame_mask_path, back_path, back_mask_path, export_type)
     if stage_index == 9:
         if mask_mode != "Normal":
             dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
