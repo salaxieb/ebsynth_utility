@@ -176,7 +176,7 @@ def ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_mas
         dbg.print("Error: clipseg_mask_prompt is Empty")
         return
 
-    project_dir, original_movie_path, frame_path, frame_mask_path, _, _, _ = project_args
+    project_dir, original_movie_path, frame_path, frame_mask_path, *args = project_args
     project_dir, original_movie_path, frame_path, frame_mask_path = Path(project_dir), Path(original_movie_path), Path(frame_path), Path(frame_mask_path)
 
     if is_invert_mask:
@@ -192,7 +192,7 @@ def ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_mas
     if frame_mask_path:
         os.makedirs(frame_mask_path, exist_ok=True)
 
-    if os.path.isdir( frame_path ):
+    if frame_path.is_dir() and len(list(frame_path.glob("*.png"))) > 0:
         dbg.print("Skip frame extraction")
     else:
         os.makedirs(frame_path, exist_ok=True)

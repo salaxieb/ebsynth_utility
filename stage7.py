@@ -105,11 +105,11 @@ def trying_to_add_audio(original_movie_path, no_snd_movie_path, output_path, tmp
     
     return False
 
-def ebsynth_utility_stage7(dbg, project_args, blend_rate,export_type,is_invert_mask):
+def ebsynth_utility_stage7(dbg, project_args, blend_rate, export_type, is_invert_mask):
     dbg.print("stage7")
     dbg.print("")
 
-    project_dir, original_movie_path, _, _, _, _, _ = project_args
+    project_dir, original_movie_path, *args = project_args
 
     fps = 30
     clip = cv2.VideoCapture(original_movie_path)

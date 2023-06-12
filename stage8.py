@@ -74,7 +74,7 @@ def ebsynth_utility_stage8(dbg, project_args, bg_src, bg_type, mask_blur_size, m
         dbg.print("Fill [configuration] -> [stage 8] -> [Background source]")
         return
 
-    project_dir, original_movie_path, _, frame_mask_path, _, _, _ = project_args
+    project_dir, original_movie_path, _, frame_mask_path, *args = project_args
 
     fps = 30
     clip = cv2.VideoCapture(original_movie_path)

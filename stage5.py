@@ -167,11 +167,11 @@ def rename_keys(key_dir):
             dirname = os.path.dirname(img)
             os.rename(img, os.path.join(dirname, f))
 
-def ebsynth_utility_stage5(dbg, project_args, is_invert_mask):
+def ebsynth_utility_stage5(dbg, project_dir, frame_path, frame_mask_path, img2img_key_path, img2img_upscale_key_path):
     dbg.print("stage5")
     dbg.print("")
     
-    project_dir, _, frame_path, frame_mask_path, _, img2img_key_path, img2img_upscale_key_path = project_args
+    # project_dir, _, frame_path, frame_mask_path, _, img2img_key_path, img2img_upscale_key_path, _, back_img2img_key_path, back_img2img_upscale_key_path = project_args
 
     if not os.path.isdir(project_dir):
         dbg.print('project_dir : no such dir %s' % project_dir)
@@ -228,13 +228,13 @@ def ebsynth_utility_stage5(dbg, project_args, is_invert_mask):
         prev_key = key
     
     project = {
-        "proj_dir" : project_dir if is_invert_mask == False else os.path.join(project_dir, "inv"),
+        "proj_dir" : project_dir,
         "file_name" : "/[" + "#" *  number_of_digits + "].png",
         "number_of_digits" : number_of_digits,
         
         "key_dir" : "img2img_upscale_key" if no_upscale == False else "img2img_key",
-        "video_dir" : "video_frame" if is_invert_mask == False else "../video_frame",
-        "mask_dir" : "video_mask" if is_invert_mask == False else "inv_video_mask",
+        "video_dir" : str(frame_path),#"video_frame" if is_invert_mask == False else "../video_frame",
+        "mask_dir" : str(frame_mask_path),#"video_mask" if is_invert_mask == False else "inv_video_mask",
         "key_weight" : 1.0,
         "video_weight" : 4.0,
         "mask_weight" : 1.0,
@@ -250,8 +250,8 @@ def ebsynth_utility_stage5(dbg, project_args, is_invert_mask):
         project["mask_dir"] = ""
 
     proj_base_name = time.strftime("%Y%m%d-%H%M%S")
-    if is_invert_mask:
-        proj_base_name = "inv_" + proj_base_name
+    # if is_invert_mask:
+        # proj_base_name = "inv_" + proj_base_name
 
     tmp=[]
     proj_index = 0
@@ -274,6 +274,3 @@ def ebsynth_utility_stage5(dbg, project_args, is_invert_mask):
     
     dbg.print("")
     dbg.print("completed.")
-
-
-

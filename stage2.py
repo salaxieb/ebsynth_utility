@@ -116,11 +116,9 @@ def remove_pngs_in_dir(path):
     for png in pngs:
         os.remove(png)
 
-def ebsynth_utility_stage2(dbg, project_args, key_min_gap, key_max_gap, key_th, key_add_last_frame, is_invert_mask):
+def ebsynth_utility_stage2(dbg, original_movie_path, frame_path, frame_mask_path, org_key_path, key_min_gap, key_max_gap, key_th, key_add_last_frame, is_invert_mask):
     dbg.print("stage2")
     dbg.print("")
-
-    _, original_movie_path, frame_path, frame_mask_path, org_key_path, _, _ = project_args
 
     remove_pngs_in_dir(org_key_path)
     os.makedirs(org_key_path, exist_ok=True)
@@ -143,12 +141,21 @@ def ebsynth_utility_stage2(dbg, project_args, key_min_gap, key_max_gap, key_th, 
         key_max_gap = max(10, key_max_gap)
         key_max_gap = int(key_max_gap * fps/30)
     
-    key_min_gap,key_max_gap = (key_min_gap,key_max_gap) if key_min_gap < key_max_gap else (key_max_gap,key_min_gap)
+    key_min_gap, key_max_gap = (key_min_gap,key_max_gap) if key_min_gap < key_max_gap else (key_max_gap,key_min_gap)
     
     dbg.print("fps: {}".format(fps))
     dbg.print("key_min_gap: {}".format(key_min_gap))
     dbg.print("key_max_gap: {}".format(key_max_gap))
     dbg.print("key_th: {}".format(key_th))
+
+    keys = analyze_key_frames(frame_path, frame_mask_path, key_th, key_min_gap, key_max_gap, key_add_last_frame, is_invert_mask)
+
+    dbg.print("keys : " + str(keys))
+    
+    for k in keys:
+        filename = str(k).zfill(5) + ".png"
+        shutil.copy( os.path.join( frame_path , filename) , os.path.join(org_key_path, filename) )
+
 
     keys = analyze_key_frames(frame_path, frame_mask_path, key_th, key_min_gap, key_max_gap, key_add_last_frame, is_invert_mask)
 

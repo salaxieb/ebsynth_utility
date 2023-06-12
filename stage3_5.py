@@ -74,7 +74,7 @@ def ebsynth_utility_stage3_5(dbg, project_args, color_matcher_method, st3_5_use_
     dbg.print("stage3.5")
     dbg.print("")
 
-    _, _, frame_path, frame_mask_path, org_key_path, img2img_key_path, _ = project_args
+    _, _, frame_path, frame_mask_path, org_key_path, img2img_key_path, *args = project_args
 
     backup_path = os.path.join( os.path.join( img2img_key_path, "..") , "st3_5_backup_img2img_key")
     backup_path = os.path.normpath(backup_path)

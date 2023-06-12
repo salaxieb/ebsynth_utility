@@ -7,6 +7,7 @@ import time
 import cv2
 import numpy as np
 from pathlib import Path
+import shutil
 
 
 def clamp(n, smallest, largest):
@@ -35,15 +36,16 @@ def create_movie_from_frames( dir, start, end, number_of_digits, fps, output_pat
             return " -vcodec rawvideo -pix_fmt bgr24 "
 
     vframes = end - start + 1
+    path = os.path.join(dir , '*.png')
     path = os.path.join(dir , '%0' + str(number_of_digits) + 'd.png')
     
     # ffmpeg -r 10 -start_number n -i snapshot_%03d.png -vframes 50 example.gif
     subprocess.call("ffmpeg -framerate " + str(fps) + " -r " + str(fps) +
                         " -start_number " + str(start) +
-                        " -i " + path + 
+                        " -i " + str(path) + 
                         " -vframes " + str( vframes ) +
                         get_export_str(export_type) +
-                        output_path, shell=True)
+                        str(output_path), shell=True)
 
 
 def search_out_dirs(proj_dir, blend_rate):
@@ -105,12 +107,12 @@ def get_ext(export_type):
 def trying_to_add_audio(original_movie_path, no_snd_movie_path, output_path, tmp_dir ):
     if os.path.isfile(original_movie_path):
         sound_path = os.path.join(tmp_dir , 'sound.mp4')
-        subprocess.call("ffmpeg -i " + original_movie_path + " -vn -acodec copy " + sound_path, shell=True)
+        subprocess.call(["ffmpeg", "-i", str(original_movie_path),"-vn", "-acodec", "copy", str(sound_path)], shell=True)
         
         if os.path.isfile(sound_path):
             # ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 output.mp4
 
-            subprocess.call("ffmpeg -i " + no_snd_movie_path + " -i " + sound_path + " -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 " + output_path, shell=True)
+            subprocess.call(["ffmpeg", "-i", str(no_snd_movie_path), "-i", str(sound_path), "-c:v", "copy", "-c:a", "aac", "-map", "0:v:0", "-map", "1:a:0", str(output_path)], shell=True)
             return True
     return False
 
@@ -119,67 +121,11 @@ def ebsynth_utility_stage0_5(dbg, project_args, export_type):
     dbg.print("changing video frame rate")
     dbg.print("")
 
-    project_dir, original_movie_path, frame_path, frame_mask_path, _, _, _ = project_args
-    project_dir, original_movie_path, frame_path, frame_mask_path = Path(project_dir), Path(original_movie_path), Path(frame_path), Path(frame_mask_path)
+    project_dir, original_movie_path, *args = project_args
+    project_dir, original_movie_path = Path(project_dir), Path(original_movie_path)
 
-    if is_invert_mask:
-        if frame_path.is_dir() and frame_mask_path.is_dir():
-            dbg.print("Skip as it appears that the frame and normal masks have already been generated.")
-            return
+    subprocess.call(f"ffmpeg -i {str(original_movie_path)} -filter:v fps=10 {str(project_dir / original_movie_path.name)}", shell=True)
 
-    if os.path.isdir( frame_path ):
-        dbg.print("Skip frame extraction")
-    else:
-        os.makedirs(frame_path, exist_ok=True)
-        png_path = os.path.join(frame_path , "%05d.png")
-        # ffmpeg.exe -ss 00:00:00  -y -i %1 -qscale 0 -f image2 -c:v png "%05d.png"
-        subprocess.call("ffmpeg -ss 00:00:00  -y -i " + original_movie_path + " -qscale 0 -f image2 -c:v png " + png_path, shell=True)
-
-    
-    dbg.print('making video desired framerate 10 - 19 fps')
-
-    fps = 30
-    clip = cv2.VideoCapture(original_movie_path)
-    if clip:
-        fps = clip.get(cv2.CAP_PROP_FPS)
-        clip.release()
-
-    desired_fps = 12
-    # 30 // 10 = 2, fps -> 15
-    # 20 // 10 -> 1, fps -> 20
-    # 60 // 10 = 5, fps -> 12
-    # 45 // 10 = 3, fps -> 15
-    each_n_th_frame = fps // desired_fps
-    all_frames = list(frame_path.glob("*.png"))
-    keep_frames = {all_frames[0], all_frames[-1]}
-
-    for i in range(0, len(all_frames), each_n_th_frame):
-        keep_frames.add(all_frames[i])
-    
-    for frame in all_frames:
-        if frame not in keep_frames:
-            frame.unlink()
-
-    dbg.print("joining frames back")
-    dbg.print("")
-
-    tmp_dir = os.path.join(project_dir , "")
-
-    nosnd_path = os.path.join(project_dir , movie_base_name + get_ext(export_type))
-    
-    start = int(all_frames[0].stem)
-    end = int(all_frames[-1].stem)
-
-    create_movie_from_frames(frame_path, start, end, number_of_digits, fps, nosnd_path, export_type)
-
-    dbg.print("exported : " + nosnd_path)
-    
-    if export_type == "mp4":
-
-        with_snd_path = os.path.join(project_dir , movie_base_name + '_with_snd.mp4')
-
-        if trying_to_add_audio(original_movie_path, nosnd_path, with_snd_path, tmp_dir):
-            dbg.print("new video path:" + with_snd_path)
-            dbg.print("update video path in tool to the left")
+    dbg.print(f"new_file_name: {str(project_dir / original_movie_path.name)}")
     dbg.print("completed.")
 

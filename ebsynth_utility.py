@@ -58,23 +58,25 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
     frame_path = os.path.join(project_dir , "video_frame")
     frame_mask_path = os.path.join(project_dir, "video_mask")
 
-    if is_invert_mask:
-        inv_path = os.path.join(project_dir, "inv")
-        os.makedirs(inv_path, exist_ok=True)
+    # if is_invert_mask:
+    back_path = os.path.join(project_dir, "inv")
+    back_mask_path = os.path.join(inv_path, "inv_video_mask")
 
-        org_key_path = os.path.join(inv_path, "video_key")
-        img2img_key_path = os.path.join(inv_path, "img2img_key")
-        img2img_upscale_key_path = os.path.join(inv_path, "img2img_upscale_key")
-    else:
-        org_key_path = os.path.join(project_dir, "video_key")
-        img2img_key_path = os.path.join(project_dir, "img2img_key")
-        img2img_upscale_key_path = os.path.join(project_dir, "img2img_upscale_key")
+    os.makedirs(inv_path, exist_ok=True)
+
+    back_org_key_path = os.path.join(inv_path, "video_key")
+    back_img2img_key_path = os.path.join(inv_path, "img2img_key")
+    back_img2img_upscale_key_path = os.path.join(inv_path, "img2img_upscale_key")
+    # else:
+    org_key_path = os.path.join(project_dir, "video_key")
+    img2img_key_path = os.path.join(project_dir, "img2img_key")
+    img2img_upscale_key_path = os.path.join(project_dir, "img2img_upscale_key")
 
     if mask_mode == "None":
         frame_mask_path = ""
     
 
-    project_args = [project_dir, original_movie_path, frame_path, frame_mask_path, org_key_path, img2img_key_path, img2img_upscale_key_path]
+    project_args = [project_dir, original_movie_path, frame_path, frame_mask_path, org_key_path, img2img_key_path, img2img_upscale_key_path, back_org_key_path, back_img2img_key_path, back_img2img_upscale_key_path]
 
 
     if stage_index == 0:
@@ -82,14 +84,13 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
 
     if stage_index == 1:
         ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_masking_method_index, st1_mask_threshold, tb_use_fast_mode, tb_use_jit, clipseg_mask_prompt, clipseg_exclude_prompt, clipseg_mask_threshold, clipseg_mask_blur_size, clipseg_mask_blur_size2, is_invert_mask)
-        if is_invert_mask:
-            inv_mask_path = os.path.join(inv_path, "inv_video_mask")
-            ebsynth_utility_stage1_invert(dbg, frame_mask_path, inv_mask_path)
+        ebsynth_utility_stage1_invert(dbg, frame_mask_path, back_mask_path)
 
     if stage_index == 2:
-        ebsynth_utility_stage2(dbg, project_args, key_min_gap, key_max_gap, key_th, key_add_last_frame, is_invert_mask)
-    if stage_index == 3:
+        ebsynth_utility_stage2(dbg, original_movie_path, frame_path, frame_mask_path, org_key_path, key_min_gap, key_max_gap, key_th, key_add_last_frame, False)
+        ebsynth_utility_stage2(dbg, original_movie_path, frame_path, back_mask_path, back_org_key_path, key_min_gap, key_max_gap, key_th, key_add_last_frame, True)
 
+    if stage_index == 3:
         sample_image = glob.glob( os.path.join(frame_path , "*.png" ) )[0]
         img_height, img_width, _ = cv2.imread(sample_image).shape
         if img_width < img_height:
@@ -151,6 +152,8 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("3. Go to Batch from Directory tab")
         dbg.print("4. Fill in the \"Input directory\" field with [" + img2img_key_path + "]" )
         dbg.print("5. Fill in the \"Output directory\" field with [" + img2img_upscale_key_path + "]" )
+        dbg.print("4. Fill in the \"Input directory\" field with [" + back_img2img_key_path + "]" )
+        dbg.print("5. Fill in the \"Output directory\" field with [" + back_img2img_upscale_key_path + "]" )
         dbg.print("6. Go to Scale to tab")
         dbg.print("7. Fill in the \"Width\" field with [" + str(img_width) + "]" )
         dbg.print("8. Fill in the \"Height\" field with [" + str(img_height) + "]" )
@@ -159,7 +162,8 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return process_end( dbg, "" )
     if stage_index == 6:
-        ebsynth_utility_stage5(dbg, project_args, is_invert_mask)
+        ebsynth_utility_stage5(dbg, project_dir, frame_path, frame_mask_path, img2img_key_path, img2img_upscale_key_path)
+        ebsynth_utility_stage5(dbg, back_path, frame_path, back_mask_path, back_img2img_key_path, back_img2img_upscale_key_path)
     if stage_index == 7:
 
         if is_invert_mask:
