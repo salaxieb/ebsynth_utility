@@ -116,12 +116,8 @@ def trying_to_add_audio(original_movie_path, no_snd_movie_path, output_path, tmp
 
 def ebsynth_utility_stage0_5(dbg, project_args, export_type):
 
-    dbg.print("splitting to frames")
+    dbg.print("changing video frame rate")
     dbg.print("")
-
-    if st1_masking_method_index == 1 and (not clipseg_mask_prompt):
-        dbg.print("Error: clipseg_mask_prompt is Empty")
-        return
 
     project_dir, original_movie_path, frame_path, frame_mask_path, _, _, _ = project_args
     project_dir, original_movie_path, frame_path, frame_mask_path = Path(project_dir), Path(original_movie_path), Path(frame_path), Path(frame_mask_path)
@@ -154,7 +150,7 @@ def ebsynth_utility_stage0_5(dbg, project_args, export_type):
     # 60 // 10 = 5, fps -> 12
     # 45 // 10 = 3, fps -> 15
     each_n_th_frame = fps // desired_fps
-    all_frames = list(Path(png_path).glob("*.png"))
+    all_frames = list(frame_path.glob("*.png"))
     keep_frames = {all_frames[0], all_frames[-1]}
 
     for i in range(0, len(all_frames), each_n_th_frame):
@@ -174,7 +170,7 @@ def ebsynth_utility_stage0_5(dbg, project_args, export_type):
     start = int(all_frames[0].stem)
     end = int(all_frames[-1].stem)
 
-    create_movie_from_frames(tmp_dir, start, end, number_of_digits, fps, nosnd_path, export_type)
+    create_movie_from_frames(frame_path, start, end, number_of_digits, fps, nosnd_path, export_type)
 
     dbg.print("exported : " + nosnd_path)
     
@@ -183,8 +179,7 @@ def ebsynth_utility_stage0_5(dbg, project_args, export_type):
         with_snd_path = os.path.join(project_dir , movie_base_name + '_with_snd.mp4')
 
         if trying_to_add_audio(original_movie_path, nosnd_path, with_snd_path, tmp_dir):
-            dbg.print("exported : " + with_snd_path)
-    
-    dbg.print("")
+            dbg.print("new video path:" + with_snd_path)
+            dbg.print("update video path in tool to the left")
     dbg.print("completed.")
 
