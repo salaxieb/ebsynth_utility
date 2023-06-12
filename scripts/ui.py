@@ -98,10 +98,13 @@ def on_ui_tabs():
                                 debug_info = gr.HTML(elem_id="ebs_info_area", value=".")
 
                             with gr.Column(scale=2):
-                                stage_index = gr.Radio(label='Process Stage', choices=["stage 1","stage 2","stage 3","stage 3.5","stage 4","stage 5","stage 6","stage 7","stage 8"], value="stage 1", type="index")
+                                stage_index = gr.Radio(label='Process Stage', choices=["stage 0.5", "stage 1","stage 2","stage 3","stage 3.5","stage 4","stage 5","stage 6","stage 7","stage 8"], value="stage 1", type="index")
                                 gr.HTML(value="<p style='margin-bottom: 0.7em'>\
                                                 The process of creating a video can be divided into the following stages.<br>\
                                                 (Stage 3, 4, and 6 only show a guide and do nothing actual processing.)<br><br>\
+                                                <b>stage 0_5</b> <br>\
+                                                    Decrease video fps to look more natural. <br>\
+                                                    <br><br>\
                                                 <b>stage 1</b> <br>\
                                                     Extract frames from the original video. <br>\
                                                     Generate a mask image. <br><br>\

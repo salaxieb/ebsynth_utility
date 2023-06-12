@@ -6,6 +6,7 @@ import cv2
 import glob
 from PIL import Image
 
+from extensions.ebsynth_utility.stage0_5 import ebsynth_utility_stage0_5
 from extensions.ebsynth_utility.stage1 import ebsynth_utility_stage1,ebsynth_utility_stage1_invert
 from extensions.ebsynth_utility.stage2 import ebsynth_utility_stage2
 from extensions.ebsynth_utility.stage5 import ebsynth_utility_stage5
@@ -76,14 +77,17 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
 
 
     if stage_index == 0:
+        ebsynth_utility_stage0_5(dbg, project_args, frame_width, frame_height, st1_masking_method_index, st1_mask_threshold, tb_use_fast_mode, tb_use_jit, clipseg_mask_prompt, clipseg_exclude_prompt, clipseg_mask_threshold, clipseg_mask_blur_size, clipseg_mask_blur_size2, is_invert_mask)
+
+    if stage_index == 1:
         ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_masking_method_index, st1_mask_threshold, tb_use_fast_mode, tb_use_jit, clipseg_mask_prompt, clipseg_exclude_prompt, clipseg_mask_threshold, clipseg_mask_blur_size, clipseg_mask_blur_size2, is_invert_mask)
         if is_invert_mask:
             inv_mask_path = os.path.join(inv_path, "inv_video_mask")
             ebsynth_utility_stage1_invert(dbg, frame_mask_path, inv_mask_path)
 
-    elif stage_index == 1:
+    if stage_index == 2:
         ebsynth_utility_stage2(dbg, project_args, key_min_gap, key_max_gap, key_th, key_add_last_frame, is_invert_mask)
-    elif stage_index == 2:
+    if stage_index == 3:
 
         sample_image = glob.glob( os.path.join(frame_path , "*.png" ) )[0]
         img_height, img_width, _ = cv2.imread(sample_image).shape
@@ -114,10 +118,10 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return process_end( dbg, "" )
     
-    elif stage_index == 3:
+    if stage_index == 4:
         ebsynth_utility_stage3_5(dbg, project_args, color_matcher_method, st3_5_use_mask, st3_5_use_mask_ref, st3_5_use_mask_org, color_matcher_ref_type, color_matcher_ref_image)
 
-    elif stage_index == 4:
+    if stage_index == 5:
         sample_image = glob.glob( os.path.join(frame_path , "*.png" ) )[0]
         img_height, img_width, _ = cv2.imread(sample_image).shape
 
@@ -153,9 +157,9 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("10. Generate")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return process_end( dbg, "" )
-    elif stage_index == 5:
+    if stage_index == 6:
         ebsynth_utility_stage5(dbg, project_args, is_invert_mask)
-    elif stage_index == 6:
+    if stage_index == 7:
 
         if is_invert_mask:
             project_dir = inv_path
@@ -170,9 +174,9 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("(I recommend associating the .ebs file with EbSynth.exe.)")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return process_end( dbg, "" )
-    elif stage_index == 7:
+    if stage_index == 8:
         ebsynth_utility_stage7(dbg, project_args, blend_rate, export_type, is_invert_mask)
-    elif stage_index == 8:
+    if stage_index == 9:
         if mask_mode != "Normal":
             dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             dbg.print("Please reset [configuration]->[etc]->[Mask Mode] to Normal.")

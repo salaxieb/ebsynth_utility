@@ -1,6 +1,5 @@
 import os
 import subprocess
-import glob
 import cv2
 import re
 
@@ -19,10 +18,10 @@ def resize_img(img, w, h):
     return cv2.resize(img, (w, h), interpolation=interpolation)
 
 def resize_all_img(path, frame_width, frame_height):
-    if not os.path.isdir(path):
+    if not path.is_dir():
         return
     
-    pngs = glob.glob( os.path.join(path, "*.png") )
+    pngs = path.glob("*.png")
     img = cv2.imread(pngs[0])
     org_h,org_w = img.shape[0],img.shape[1]
 
@@ -34,7 +33,7 @@ def resize_all_img(path, frame_width, frame_height):
         frame_height = int(frame_width * org_h / org_w)
     else:
         pass
-    print("({0},{1}) resize to ({2},{3})".format(org_w, org_h, frame_width, frame_height))
+    print(f"({org_w},{org_h}) resize to ({frame_width},{frame_height})")
 
     for png in pngs:
         img = cv2.imread(png)
@@ -42,31 +41,28 @@ def resize_all_img(path, frame_width, frame_height):
         cv2.imwrite(png, img)
 
 def remove_pngs_in_dir(path):
-    if not os.path.isdir(path):
+    if not path.is_dir():
         return
     
-    pngs = glob.glob( os.path.join(path, "*.png") )
+    pngs = path.glob("*.png")
     for png in pngs:
         os.remove(png)
 
 def create_and_mask(mask_dir1, mask_dir2, output_dir):
-    masks = glob.glob( os.path.join(mask_dir1, "*.png") )
+    masks = mask_dir1.glob("*.png")
 
     for mask1 in masks:
-        base_name = os.path.basename(mask1)
-        print("combine {0}".format(base_name))
+        print(f"combine {mask1.name}")
         
-        mask2 = os.path.join(mask_dir2, base_name)
-        if not os.path.isfile(mask2):
-            print("{0} not found!!! -> skip".format(mask2))
+        mask2 = mask_dir2 / mask1.name
+        if not mask2.is_file():
+            print(f"{mask2} not found!!! -> skip")
             continue
 
         img_1 = cv2.imread(mask1)
         img_2 = cv2.imread(mask2)
         img_1 = np.minimum(img_1,img_2)
-
-        out_path = os.path.join(output_dir, base_name)
-        cv2.imwrite(out_path, img_1)
+        cv2.imwrite(output_dir / mask1.name, img_1)
 
 
 def create_mask_clipseg(input_dir, output_dir, clipseg_mask_prompt, clipseg_exclude_prompt, clipseg_mask_threshold, mask_blur_size, mask_blur_size2):
@@ -80,7 +76,7 @@ def create_mask_clipseg(input_dir, output_dir, clipseg_mask_prompt, clipseg_excl
     model = CLIPSegForImageSegmentation.from_pretrained("CIDAS/clipseg-rd64-refined")
     model.to(device)
 
-    imgs = glob.glob( os.path.join(input_dir, "*.png") )
+    imgs = input_dir.glob("*.png")
     texts = [x.strip() for x in clipseg_mask_prompt.split(',')]
     exclude_texts = [x.strip() for x in clipseg_exclude_prompt.split(',')] if clipseg_exclude_prompt else None
     
@@ -90,9 +86,8 @@ def create_mask_clipseg(input_dir, output_dir, clipseg_mask_prompt, clipseg_excl
         all_texts = texts
 
 
-    for img_count,img in enumerate(imgs):
-        image = Image.open(img)
-        base_name = os.path.basename(img)
+    for img_count, img_path in enumerate(imgs):
+        image = Image.open(img_path)
 
         inputs = processor(text=all_texts, images=[image] * len(all_texts), padding="max_length", return_tensors="pt")
         inputs = inputs.to(device)
@@ -136,10 +131,10 @@ def create_mask_clipseg(input_dir, output_dir, clipseg_mask_prompt, clipseg_excl
         mask_img = resize_img(mask_img, image.width, image.height)
 
         mask_img = cv2.cvtColor(mask_img, cv2.COLOR_GRAY2RGB)
-        save_path = os.path.join(output_dir, base_name)
+        save_path = output_dir / img_path.stem
         cv2.imwrite(save_path, mask_img)
 
-        print("{0} / {1}".format( img_count+1,len(imgs) ))
+        print(f"{img_count+1} / {len(imgs)}")
     
     devices.torch_gc()
 
@@ -150,28 +145,28 @@ def create_mask_transparent_background(input_dir, output_dir, tb_use_fast_mode, 
     venv = "venv"
     if 'VIRTUAL_ENV' in os.environ:
         venv = os.environ['VIRTUAL_ENV']
-    bin_path = os.path.join(venv, "Scripts")
-    bin_path = os.path.join(bin_path, "transparent-background")
+    bin_path = Path(venv) / "Scripts"
+    bin_path = bin_path / "transparent-background"
 
     if os.path.isfile(bin_path) or os.path.isfile(bin_path + ".exe"):
         subprocess.call(bin_path + " --source " + input_dir + " --dest " + output_dir + " --type map" + fast_str + jit_str, shell=True)
     else:
         subprocess.call("transparent-background --source " + input_dir + " --dest " + output_dir + " --type map" + fast_str + jit_str, shell=True)
 
-    mask_imgs = glob.glob( os.path.join(output_dir, "*.png") )
+    mask_img_paths = output_dir.glob("*.png") 
     
-    for m in mask_imgs:
-        img = cv2.imread(m)
+    for mask_path in mask_img_paths:
+        img = cv2.imread(mask_path)
         img[img < int( 255 * st1_mask_threshold )] = 0
-        cv2.imwrite(m, img)
+        cv2.imwrite(mask_path, img)
 
     p = re.compile(r'([0-9]+)_[a-z]*\.png')
 
-    for mask in mask_imgs:
-        base_name = os.path.basename(mask)
-        m = p.fullmatch(base_name)
+    for mask_path in mask_img_paths:
+        m = p.fullmatch(mask_path.stem)
         if m:
-            os.rename(mask, os.path.join(output_dir, m.group(1) + ".png"))
+            mask.rename(output_dir / m.group(1)).with_suffix(".png")
+
 
 def ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_masking_method_index, st1_mask_threshold, tb_use_fast_mode, tb_use_jit, clipseg_mask_prompt, clipseg_exclude_prompt, clipseg_mask_threshold, clipseg_mask_blur_size, clipseg_mask_blur_size2, is_invert_mask):
     dbg.print("stage1")
@@ -182,9 +177,10 @@ def ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_mas
         return
 
     project_dir, original_movie_path, frame_path, frame_mask_path, _, _, _ = project_args
+    project_dir, original_movie_path, frame_path, frame_mask_path = Path(project_dir), Path(original_movie_path), Path(frame_path), Path(frame_mask_path)
 
     if is_invert_mask:
-        if os.path.isdir( frame_path ) and os.path.isdir( frame_mask_path ):
+        if frame_path.is_dir() and frame_mask_path.is_dir():
             dbg.print("Skip as it appears that the frame and normal masks have already been generated.")
             return
 
@@ -250,9 +246,7 @@ def ebsynth_utility_stage1_invert(dbg, frame_mask_path, inv_mask_path):
     for m in mask_imgs:
         img = cv2.imread(m)
         inv = cv2.bitwise_not(img)
-
-        base_name = os.path.basename(m)
-        cv2.imwrite(os.path.join(inv_mask_path,base_name), inv)
+        cv2.imwrite(inv_mask_path / m.name, inv)
 
     dbg.print("")
     dbg.print("completed.")
