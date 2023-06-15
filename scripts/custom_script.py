@@ -860,10 +860,10 @@ class Script(scripts.Script):
 
 
         def get_mask_of_img(img):
-            img_basename = Path(img).stem
+            img_basename = Path(img)
             
             if mask_mode != "None":
-                mask_path = os.path.join( frame_mask_path , img_basename + '_map.png' )
+                mask_path = os.path.join( frame_mask_path , img_basename.name )
                 if os.path.isfile( mask_path ):
                     return mask_path
             return ""

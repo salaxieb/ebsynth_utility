@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from PIL import Image
+from tqdm import tqdm
 
 def clamp(n, smallest, largest):
     return sorted([smallest, n, largest])[1]
@@ -81,7 +82,7 @@ def ebsynth_utility_stage7_5(dbg, project_dir, original_movie_path, frame_mask_p
     mixed_crossfade_path.mkdir(exist_ok=True)
 
     ### create frame imgs
-    for front_image_filename in front_frames.glob('*.png'):
+    for front_image_filename in tqdm(front_frames.glob('*.png')):
         front_image = Image.open(str(front_image_filename))
         front_mask_image = Image.open(str(frame_mask_path / front_image_filename.name)).convert('L')
 

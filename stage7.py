@@ -81,6 +81,19 @@ def trying_to_add_audio(original_movie_path, no_snd_movie_path, output_path, tmp
     return False
 
 def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
+    # pixel_front_img_1 -> 4
+    # mask_img_1 -> 0.1
+    # pixel_front_img_2 -> 10
+    # mask_img_2 -> 0.2
+
+    # pixel_back_img_1 -> 20
+    # mask_img_1 -> 0.9
+    # pixel_back_img_2 -> 15
+    # mask_img_2 -> 0.8
+
+    # now: (4 + 10) / 2 * 0.15 + (20 + 15) / 2 * 0.85
+    # must be: 4 * 0.1 + 10 * 0.2
+
 
     dbg.print("stage7")
     dbg.print("")
@@ -159,7 +172,6 @@ def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
         else:
             # front ... cur_clip
             # back ... none
-            filename = str(i).zfill(number_of_digits) + ".png"
             shutil.copy( os.path.join(out_dirs[cur_clip]['path'] , filename) , os.path.join(tmp_dir , filename) )
         
         current_frame = i

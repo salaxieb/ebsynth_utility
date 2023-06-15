@@ -10,6 +10,7 @@ from extensions.ebsynth_utility.stage0_5 import ebsynth_utility_stage0_5
 from extensions.ebsynth_utility.stage1 import ebsynth_utility_stage1,ebsynth_utility_stage1_invert
 from extensions.ebsynth_utility.stage2 import ebsynth_utility_stage2
 from extensions.ebsynth_utility.stage5 import ebsynth_utility_stage5
+from extensions.ebsynth_utility.stage6 import ebsynth_utility_stage6
 from extensions.ebsynth_utility.stage7 import ebsynth_utility_stage7
 from extensions.ebsynth_utility.stage7_5 import ebsynth_utility_stage7_5
 from extensions.ebsynth_utility.stage8 import ebsynth_utility_stage8
@@ -81,7 +82,7 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
 
 
     if stage_index == 0:
-        ebsynth_utility_stage0_5(dbg, project_args, export_type)
+        ebsynth_utility_stage0_5(dbg, project_dir, original_movie_path)
 
     if stage_index == 1:
         ebsynth_utility_stage1(dbg, project_args, frame_width, frame_height, st1_masking_method_index, st1_mask_threshold, tb_use_fast_mode, tb_use_jit, clipseg_mask_prompt, clipseg_exclude_prompt, clipseg_mask_threshold, clipseg_mask_blur_size, clipseg_mask_blur_size2, is_invert_mask)
@@ -159,10 +160,10 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("10. Generate")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return process_end( dbg, "" )
-    if stage_index == 6:
+    if stage_index == 6:  # stage 5
         ebsynth_utility_stage5(dbg, project_dir, frame_path, frame_mask_path, img2img_key_path, img2img_upscale_key_path)
         ebsynth_utility_stage5(dbg, back_path, frame_path, back_mask_path, back_img2img_key_path, back_img2img_upscale_key_path)
-    if stage_index == 7:
+    if stage_index == 7:  # satage 6
 
         if is_invert_mask:
             project_dir = back_path
@@ -176,14 +177,19 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
         dbg.print("If multiple .ebs files are generated, run them all.")
         dbg.print("(I recommend associating the .ebs file with EbSynth.exe.)")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        ebsynth_utility_stage6(frames_path, img2img_key_path, frame_mask_path)
+        ebsynth_utility_stage6(frames_path, back_img2img_key_path, back_mask_path)
         return process_end( dbg, "" )
-    if stage_index == 8:
+    if stage_index == 8:  # stage 6.9
+        # blending horizontally:
+        ebsynth_utility_stage6_9()
+    if stage_index == 9:  # stage 7
         ebsynth_utility_stage7(dbg, project_dir, blend_rate)
         ebsynth_utility_stage7(dbg, back_path, blend_rate)
 
-    if stage_index == 9:
+    if stage_index == 10:
         ebsynth_utility_stage7_5(dbg, project_dir, original_movie_path, frame_mask_path, back_path, back_mask_path, export_type)
-    if stage_index == 9:
+    if stage_index == 11:
         if mask_mode != "Normal":
             dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             dbg.print("Please reset [configuration]->[etc]->[Mask Mode] to Normal.")
