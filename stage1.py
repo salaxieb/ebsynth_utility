@@ -210,7 +210,8 @@ def create_mask_transparent_background(
 
 
 def ebsynth_utility_stage1(
-    dbgproject_args,
+    dbg,
+    project_args,
     frame_width,
     frame_height,
     st1_masking_method_index,
@@ -333,6 +334,8 @@ def ebsynth_utility_stage1(
 def ebsynth_utility_stage1_invert(dbg, frame_mask_path, inv_mask_path):
     dbg.print("stage 1 create_invert_mask")
     dbg.print("")
+
+    frame_mask_path, inv_mask_path = Path(frame_mask_path), Path(inv_mask_path)
 
     if not frame_mask_path.is_dir():
         dbg.print(frame_mask_path + " not found")
