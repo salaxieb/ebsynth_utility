@@ -140,6 +140,8 @@ def ebsynth_utility_stage2(
     dbg.print("stage2")
     dbg.print("")
 
+    original_movie_path, frame_path, frame_mask_path, org_key_path = Path(original_movie_path), Path(frame_path), Path(frame_mask_path), Path(org_key_path)
+
     remove_pngs_in_dir(org_key_path)
     org_key_path.mkdir(exist_ok=True)
 
@@ -168,7 +170,7 @@ def ebsynth_utility_stage2(
     )
 
     dbg.print(f"fps: {fps}")
-    dbg.printf(f"key_min_gap: {key_min_gap}")
+    dbg.print(f"key_min_gap: {key_min_gap}")
     dbg.print(f"key_max_gap: {key_max_gap}")
     dbg.print(f"key_th: {key_th}")
 

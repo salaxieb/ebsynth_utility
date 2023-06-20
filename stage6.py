@@ -5,10 +5,11 @@ from natsort import natsorted
 from tqdm import tqdm
 
 
-def ebsynth_utility_stage6(dbg, frames_path, style_frames_path, masks_path):
+def ebsynth_utility_stage6(dbg, project_dir, frames_path, style_frames_path, masks_path):
     dbg.print("stage6")
     dbg.print("")
 
+    project_dir = Path(project_dir)
     frames_path = Path(frames_path)
     style = Path(style_frames_path)
     masks_path = Path(masks_path)
@@ -19,9 +20,10 @@ def ebsynth_utility_stage6(dbg, frames_path, style_frames_path, masks_path):
     key_style_frames = natsorted(list(style.glob('*.png')))
 
     for i, key_frame in enumerate(tqdm(key_style_frames)):
-        out_dir_name = Path(f'out-{key_frame.stem}-back')
+        out_dir_name = project_dir / f'out-{key_frame.stem}'
         out_dir_name.mkdir(exist_ok=True)
         # style frames before
+        frame = "00000"
         if i > 0:
             for frame in all_frames[all_frames.index(key_style_frames[i-1].stem): all_frames.index(key_style_frames[i].stem) +  1]:
                 subprocess.run([
