@@ -10,7 +10,7 @@ from pathlib import Path
 import shutil
 
 
-def ebsynth_utility_stage0_5(dbg, project_dir, original_movie_path):
+def ebsynth_utility_stage0_5(dbg, project_dir, original_movie_path, target_fps):
 
     dbg.print("changing video frame rate")
     dbg.print("")
@@ -21,7 +21,7 @@ def ebsynth_utility_stage0_5(dbg, project_dir, original_movie_path):
     if destination.exists():
         destination.unlink()
 
-    subprocess.call(f"ffmpeg -i {str(original_movie_path)} -filter:v fps=24 {str(project_dir / original_movie_path.name)}", shell=True)
+    subprocess.call(f"ffmpeg -i {str(original_movie_path)} -filter:v fps={target_fps} {str(project_dir / original_movie_path.name)}", shell=True)
 
     dbg.print(f"new_file_name: {str(project_dir / original_movie_path.name)}")
     dbg.print("completed.")

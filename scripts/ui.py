@@ -91,6 +91,7 @@ def on_ui_tabs():
 
                                 with gr.TabItem(label="etc", elem_id='ebs_configuration_tab_etc'):
                                     mask_mode = gr.Dropdown(choices=["Normal","Invert","None"], value="Normal" ,label="Mask Mode")
+                                    target_fps = gr.Textbox(label='Target FPS', value="24", lines=1)
 
                     with gr.Column(variant='panel'):
                         with gr.Column(scale=1):
@@ -184,6 +185,7 @@ def on_ui_tabs():
                     fg_transparency,
 
                     mask_mode,
+                    target_fps,
 
                 ],
                 outputs=[
