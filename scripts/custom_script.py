@@ -22,6 +22,7 @@ import json
 import re
 from pathlib import Path
 from extensions.ebsynth_utility.calculator import CalcParser,ParseError
+from tqdm.contrib import tzip
 
 def get_my_dir():
     if os.path.isdir("extensions/ebsynth_utility"):
@@ -942,7 +943,7 @@ class Script(scripts.Script):
 
         ######################
         # img2img
-        for img, mask, controlnet_input_img, face_coords, prompts in zip(imgs, masks, controlnet_input_imgs, face_coords_dict.values(), prompts_dict.values()):
+        for img, mask, controlnet_input_img, face_coords, prompts in tzip(imgs, masks, controlnet_input_imgs, face_coords_dict.values(), prompts_dict.values()):
 
             # Generation cancelled.
             if shared.state.interrupted:
@@ -953,6 +954,12 @@ class Script(scripts.Script):
             mask_image = Image.open(mask) if mask else None
 
             img_basename = os.path.basename(img)
+
+            # empty mask
+            print('max mask', np.max(mask_image))
+            if np.max(mask_image) == 0:
+                image.save( os.path.join( img2img_key_path , img_basename))
+                continue
             
             _p = copy.copy(p)
             

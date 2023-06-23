@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 from natsort import natsorted
 from tqdm import tqdm
+import shutil
 
 
 def ebsynth_utility_stage6(dbg, project_dir, frames_path, style_frames_path, masks_path):
@@ -26,13 +27,20 @@ def ebsynth_utility_stage6(dbg, project_dir, frames_path, style_frames_path, mas
         frame = "00000"
         if i > 0:
             for frame in all_frames[all_frames.index(key_style_frames[i-1].stem): all_frames.index(key_style_frames[i].stem) +  1]:
+                mask_image = Image.open(str(masks_path / frame.name))
+                # empty mask
+                print('max mask', np.max(mask_image))
+                if np.max(mask_image) == 0:
+                    # just copy image
+                    shutil.copy((frames_path / frame).with_suffix(".png"), (out_dir_name / frame).with_suffix(".png"))
+
                 subprocess.run([
                     "/home/ubuntu/ebsynth/bin/ebsynth",
                     # str(Path("C:") / "Users" / "ILDAR" / "Downloads" / "EbSynth-Beta-Win" / "EbSynth"),
                     "-style", str(key_frame),
-                    "-guide", str((masks_path / key_frame.stem).with_suffix('.png')), str((masks_path / frame).with_suffix(".png")),
+                    "-guide", str(masks_path / key_frame.name), str(masks_path / frame.name),
                     "-weight", "1",
-                    "-guide", str((frames_path / key_frame.stem).with_suffix('.png')), str((frames_path / frame).with_suffix(".png")),
+                    "-guide", str(frames_path / key_frame.name), str((frames_path / frame).with_suffix(".png")),
                     "-weight", "4",
                     "-output", str((out_dir_name / frame).with_suffix(".png")),
                     "-backend", 'cuda',
@@ -40,13 +48,19 @@ def ebsynth_utility_stage6(dbg, project_dir, frames_path, style_frames_path, mas
         # style frames after
         if i < len(key_style_frames) - 1:
             for frame in all_frames[all_frames.index(key_style_frames[i].stem): all_frames.index(key_style_frames[i+1].stem) + 1]:
+                mask_image = Image.open(str(masks_path / frame.name))
+                # empty mask
+                print('max mask', np.max(mask_image))
+                if np.max(mask_image) == 0:
+                    # just copy image
+                    shutil.copy((frames_path / frame).with_suffix(".png"), (out_dir_name / frame).with_suffix(".png"))
                 subprocess.run([
                     "/home/ubuntu/ebsynth/bin/ebsynth",
                     # str(Path("C:") / "Users" / "ILDAR" / "Downloads" / "EbSynth-Beta-Win" / "EbSynth"),
                     "-style", str(key_frame),
-                    "-guide", str((masks_path / key_frame.stem).with_suffix('.png')), str((masks_path / frame).with_suffix(".png")),
+                    "-guide", str(masks_path / key_frame.name), str(masks_path / frame.name),
                     "-weight", "1",
-                    "-guide", str((frames_path / key_frame.stem).with_suffix('.png')), str((frames_path / frame).with_suffix(".png")),
+                    "-guide", str(frames_path / key_frame.name), str((frames_path / frame).with_suffix(".png")),
                     "-weight", "4",
                     "-output", str((out_dir_name / frame).with_suffix(".png")),
                     "-backend", 'cuda',

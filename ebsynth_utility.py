@@ -195,6 +195,14 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
             dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             return process_end( dbg, "" )
         ebsynth_utility_stage8(dbg, project_args, bg_src, bg_type, mask_blur_size, mask_threshold, fg_transparency, export_type)
+
+    if stage_index == 11:
+        ebsynth_utility_stage6(dbg, project_dir, frame_path, img2img_key_path, frame_mask_path)
+        ebsynth_utility_stage6(dbg, back_path, frame_path, back_img2img_key_path, back_mask_path)
+        ebsynth_utility_stage7(dbg, project_dir, blend_rate)
+        ebsynth_utility_stage7(dbg, back_path, blend_rate)
+        ebsynth_utility_stage7_5(dbg, project_dir, original_movie_path, frame_mask_path, back_path, back_mask_path, export_type)
+
     else:
         pass
 
