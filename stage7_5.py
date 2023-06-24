@@ -73,8 +73,8 @@ def ebsynth_utility_stage7_5(dbg, project_dir, original_movie_path, frame_mask_p
     dbg.print("export_type: {}".format(export_type))
     dbg.print("fps: {}".format(fps))
     
-    front_frames = Path(project_dir) / "crossfade_tmp"
-    back_frames = Path(back_path) / "crossfade_tmp"
+    front_frames = Path(project_dir) / "out"
+    back_frames = Path(back_path) / "out"
     frame_mask_path = Path(frame_mask_path)
     back_mask_path = Path(back_mask_path)
 

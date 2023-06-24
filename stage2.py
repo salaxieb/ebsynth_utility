@@ -23,20 +23,26 @@ def analyze_key_frames(
     frames = sorted(png_dir.glob("[0-9]*.png"))
 
     threshold = 0.85
+    mask_threshold = 0.8
     prev_img_size = get_jpg_size(frames[0])
-    prev_mask_size = get_jpg_size(frames[0])
+    prev_mask_size = get_jpg_size(mask_dir / frames[0].name)
     seq_start = frames[0].stem
 
     for i, frame in enumerate(frames[1:], 1):
         im_size = get_jpg_size(frame)
         mask_size = get_jpg_size(mask_dir / frame.name)
+        print(frame, min(prev_mask_size, mask_size) / max(prev_mask_size, mask_size))
 
-        if min(prev_img_size, im_size) / max(prev_img_size, im_size) < threshold or min(prev_mask_size, mask_size) / max(prev_mask_size, mask_size) < threshold:
+        if any((
+            min(prev_img_size, im_size) / max(prev_img_size, im_size) < threshold,
+            min(prev_mask_size, mask_size) / max(prev_mask_size, mask_size) < mask_threshold
+        )):
             # this frame begins new sequence
             keys.append((seq_start, frames[i-1].stem))
-            print('seq_start', seq_start, 'seq_end', frames[i-1].stem)
+            print('seq_start', int(seq_start), 'seq_end', int(frames[i-1].stem))
             seq_start = frame.stem
         prev_img_size = im_size
+        prev_mask_size = mask_size
 
     keys.append((seq_start, frames[-1].stem))
 
@@ -69,31 +75,10 @@ def ebsynth_utility_stage2(
 
     original_movie_path, frame_path, frame_mask_path, org_key_path = Path(original_movie_path), Path(frame_path), Path(frame_mask_path), Path(org_key_path)
 
+    for folder in org_key_path.glob("seq_*"):
+        folder.unlink()
+
     remove_pngs_in_dir(org_key_path)
-
-    fps = 30
-    clip = cv2.VideoCapture(str(original_movie_path))
-    if clip:
-        fps = clip.get(cv2.CAP_PROP_FPS)
-        clip.release()
-
-    if key_min_gap == -1:
-        key_min_gap = int(10 * fps / 30)
-    else:
-        key_min_gap = max(1, key_min_gap)
-        key_min_gap = int(key_min_gap * fps / 30)
-
-    if key_max_gap == -1:
-        key_max_gap = int(300 * fps / 30)
-    else:
-        key_max_gap = max(10, key_max_gap)
-        key_max_gap = int(key_max_gap * fps / 30)
-
-    key_min_gap, key_max_gap = (
-        (key_min_gap, key_max_gap)
-        if key_min_gap < key_max_gap
-        else (key_max_gap, key_min_gap)
-    )
 
     dbg.print(f"fps: {fps}")
     dbg.print(f"key_min_gap: {key_min_gap}")
@@ -113,11 +98,17 @@ def ebsynth_utility_stage2(
     dbg.print("keys : " + str(keys))
 
     for i, (start, end) in enumerate(keys):
-        (org_key_path / f"seq_{i}").mkdir(exist_ok=True, parents=True)
+        save_path = org_key_path / f"seq_{start}_{end}"
+        save_path.mkdir(exist_ok=True, parents=True)
         filename = str(start).zfill(5) + ".png"
-        shutil.copy(frame_path / filename, org_key_path / f"seq_{i}" / filename)
+        shutil.copy(frame_path / filename, save_path / filename)
+
+        mid = (start + end) // 2
+        filename = str(mid).zfill(5) + ".png"
+        shutil.copy(frame_path / filename, save_path / filename)
+
         filename = str(end).zfill(5) + ".png"
-        shutil.copy(frame_path / filename, org_key_path / f"seq_{i}" / filename)
+        shutil.copy(frame_path / filename, save_path / filename)
 
     dbg.print("")
     dbg.print("Keyframes are output to [" + str(org_key_path) + "]")

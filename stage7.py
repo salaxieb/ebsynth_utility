@@ -6,60 +6,61 @@ import shutil
 import time
 import cv2
 import numpy as np
+from natsort import natsorted
 
 
 def clamp(n, smallest, largest):
     return sorted([smallest, n, largest])[1]
 
-def search_out_dirs(proj_dir, blend_rate):
-    ### create out_dirs
-    p = re.compile(r'.*[\\\/]out\-([0-9]+)[\\\/]')
+# def search_out_dirs(proj_dir, blend_rate):
+#     ### create out_dirs
+#     p = re.compile(r'.*[\\\/]out\-([0-9]+)[\\\/]')
 
-    number_of_digits = -1
+#     number_of_digits = -1
     
-    out_dirs=[]
-    for d in glob.glob( os.path.join(proj_dir ,"out-*/"), recursive=False):
-        m = p.fullmatch(d)
-        if m:
-            if number_of_digits == -1:
-                number_of_digits = len(m.group(1))
-            out_dirs.append({ 'keyframe':int(m.group(1)), 'path':d })
+#     out_dirs=[]
+#     for d in glob.glob( os.path.join(proj_dir ,"out-*/"), recursive=False):
+#         m = p.fullmatch(d)
+#         if m:
+#             if number_of_digits == -1:
+#                 number_of_digits = len(m.group(1))
+#             out_dirs.append({ 'keyframe':int(m.group(1)), 'path':d })
     
-    out_dirs = sorted(out_dirs, key=lambda x: x['keyframe'], reverse=True)
+#     out_dirs = sorted(out_dirs, key=lambda x: x['keyframe'], reverse=True)
     
-    print(number_of_digits)
+#     print(number_of_digits)
     
-    prev_key = -1
-    for out_d in out_dirs:
-        out_d['next_keyframe'] = prev_key
-        prev_key = out_d['keyframe']
+#     prev_key = -1
+#     for out_d in out_dirs:
+#         out_d['next_keyframe'] = prev_key
+#         prev_key = out_d['keyframe']
     
-    out_dirs = sorted(out_dirs, key=lambda x: x['keyframe'])
+#     out_dirs = sorted(out_dirs, key=lambda x: x['keyframe'])
     
     
-    ### search start/end frame
-    prev_key = 0
-    for out_d in out_dirs:
-        imgs = sorted(glob.glob(  os.path.join( out_d['path'], '[0-9]'*number_of_digits + '.png') ))
+#     ### search start/end frame
+#     prev_key = 0
+#     for out_d in out_dirs:
+#         imgs = sorted(glob.glob(  os.path.join( out_d['path'], '[0-9]'*number_of_digits + '.png') ))
         
-        first_img = imgs[0]
-        print(first_img)
-        basename_without_ext = os.path.splitext(os.path.basename(first_img))[0]
-        blend_timing = (prev_key - out_d['keyframe'])*blend_rate + out_d['keyframe']
-        blend_timing = round(blend_timing)
-        start_frame = max( blend_timing, int(basename_without_ext) )
-        out_d['startframe'] = start_frame
+#         first_img = imgs[0]
+#         print(first_img)
+#         basename_without_ext = os.path.splitext(os.path.basename(first_img))[0]
+#         blend_timing = (prev_key - out_d['keyframe'])*blend_rate + out_d['keyframe']
+#         blend_timing = round(blend_timing)
+#         start_frame = max( blend_timing, int(basename_without_ext) )
+#         out_d['startframe'] = start_frame
         
-        last_img = imgs[-1]
-        print(last_img)
-        basename_without_ext = os.path.splitext(os.path.basename(last_img))[0]
-        end_frame = min( out_d['next_keyframe'], int(basename_without_ext) )
-        if end_frame == -1:
-            end_frame = int(basename_without_ext)
-        out_d['endframe'] = end_frame
-        prev_key = out_d['keyframe']
+#         last_img = imgs[-1]
+#         print(last_img)
+#         basename_without_ext = os.path.splitext(os.path.basename(last_img))[0]
+#         end_frame = min( out_d['next_keyframe'], int(basename_without_ext) )
+#         if end_frame == -1:
+#             end_frame = int(basename_without_ext)
+#         out_d['endframe'] = end_frame
+#         prev_key = out_d['keyframe']
     
-    return number_of_digits, out_dirs
+#     return number_of_digits, out_dirs
 
 def get_ext(export_type):
     if export_type in ("mp4","webm","gif"):
@@ -99,91 +100,27 @@ def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
     dbg.print("")
     blend_rate = clamp(blend_rate, 0.0, 1.0)
     dbg.print("blend_rate: {}".format(blend_rate))
-    
-    tmp_dir = os.path.join( project_dir , "crossfade_tmp")
 
-    if os.path.isdir(tmp_dir):
-        shutil.rmtree(tmp_dir)
-    os.mkdir(tmp_dir)
+    # project_dir = Path(project_dir)
     
-    number_of_digits, out_dirs = search_out_dirs(project_dir, blend_rate)
-    
-    if number_of_digits == -1:
-        dbg.print('no out dir')
-        return
-    
-    ### create frame imgs
-    
-    start = out_dirs[0]['startframe']
-    end = out_dirs[-1]['endframe']
-    
-    cur_clip = 0
-    next_clip = cur_clip+1 if len(out_dirs) > cur_clip+1 else -1
-    
-    current_frame = 0
-    
-    print(str(start) + " -> " + str(end+1))
-    
-    black_img = np.zeros_like(
-        cv2.imread(
-            os.path.join(
-                out_dirs[cur_clip]['path'],
-                str(start).zfill(number_of_digits) + ".png"
-        )))
-    
-    for i in range(start, end+1):
-        
-        print(str(i) + " / " + str(end))
+    # tmp_dir = project_dir / "crossfade_tmp"
 
-        if next_clip == -1:
-            break
-        
-        if i in range(out_dirs[cur_clip]['startframe'], out_dirs[cur_clip]['endframe'] +1):
-            pass
-        elif i in range(out_dirs[next_clip]['startframe'], out_dirs[next_clip]['endframe'] +1):
-            cur_clip = next_clip
-            next_clip = cur_clip+1 if len(out_dirs) > cur_clip+1 else -1
-            if next_clip == -1:
-                break
-        else:
-            ### black
-            # front ... none
-            # back ... none
-            cv2.imwrite( os.path.join(tmp_dir, filename) , black_img)
-            current_frame = i
-            continue
-        
-        filename = str(i).zfill(number_of_digits) + ".png"
-        
-        # front ... cur_clip
-        # back ... next_clip or none
-        
-        if i in range( out_dirs[next_clip]['startframe'], out_dirs[next_clip]['endframe'] +1):
-            # front ... cur_clip
-            # back ... next_clip
-            img_f = cv2.imread( os.path.join(out_dirs[cur_clip]['path'] , filename) )
-            img_b = cv2.imread( os.path.join(out_dirs[next_clip]['path'] , filename) )
-            
-            back_rate = (i - out_dirs[next_clip]['startframe'])/ max( 1 , (out_dirs[cur_clip]['endframe'] - out_dirs[next_clip]['startframe']) )
-            
-            img = cv2.addWeighted(img_f, 1.0 - back_rate, img_b, back_rate, 0)
-            
-            cv2.imwrite( os.path.join(tmp_dir , filename) , img)
-        else:
-            # front ... cur_clip
-            # back ... none
-            shutil.copy( os.path.join(out_dirs[cur_clip]['path'] , filename) , os.path.join(tmp_dir , filename) )
-        
-        current_frame = i
+    # if tmp_dir.is_dir():
+    #     shutil.rmtree(tmp_dir)
+    # tmp_dir.mkdir()
     
+    # out_dir_name = project_dir / 'out'
+
+    # black_img = np.zeros_like(
+    #     cv2.imread(
+    #         os.path.join(
+    #             out_dirs[cur_clip]['path'],
+    #             str(start).zfill(number_of_digits) + ".png"
+    #     )))
+
+    # for image in out_dir_name.glob('*.png'):
+    #     shutil.copy(image, tmp_dir)
     
-    start2 = current_frame+1
-    
-    print(str(start2) + " -> " + str(end+1))
-    
-    for i in range(start2, end+1):
-        filename = str(i).zfill(number_of_digits) + ".png"
-        shutil.copy( os.path.join(out_dirs[cur_clip]['path'] , filename) , os.path.join(tmp_dir , filename) )
     
     dbg.print("")
     dbg.print("completed.")

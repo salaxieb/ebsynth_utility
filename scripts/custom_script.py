@@ -1,6 +1,5 @@
 import modules.scripts as scripts
 import gradio as gr
-import os
 import torch
 import random
 import time
@@ -16,7 +15,6 @@ import cv2
 import copy
 import numpy as np
 from PIL import Image, ImageOps
-import glob
 import requests
 import json
 import re
@@ -25,19 +23,19 @@ from extensions.ebsynth_utility.calculator import CalcParser,ParseError
 from tqdm.contrib import tzip
 
 def get_my_dir():
-    if os.path.isdir("extensions/ebsynth_utility"):
-        return "extensions/ebsynth_utility"
-    return scripts.basedir()
+    if not Path("extensions/ebsynth_utility").is_dir():
+        return scripts.basedir()
+    return Path("extensions/ebsynth_utility")
 
 def x_ceiling(value, step):
     return -(-value // step) * step
 
 def remove_pngs_in_dir(path):
-    if not os.path.isdir(path):
+    if not path.is_dir*():
         return
-    pngs = glob.glob( os.path.join(path, "*.png") )
+    pngs = path.glob("*.png")
     for png in pngs:
-        os.remove(png)
+        png.unlink()
 
 def resize_img(img, w, h):
     if img.shape[0] + img.shape[1] < h + w:
@@ -51,19 +49,18 @@ def download_and_cache_models(dirname):
     download_url = 'https://github.com/zymk9/yolov5_anime/blob/8b50add22dbd8224904221be3173390f56046794/weights/yolov5s_anime.pt?raw=true'
     model_file_name = 'yolov5s_anime.pt'
 
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
+    dirname.mkdir(exist_ok=True)
 
-    cache_file = os.path.join(dirname, model_file_name)
-    if not os.path.exists(cache_file):
+    cache_file = dirname / model_file_name
+    if not cache_file.is_file():
         print(f"downloading face detection model from '{download_url}' to '{cache_file}'")
         response = requests.get(download_url)
         with open(cache_file, "wb") as f:
             f.write(response.content)
 
-    if os.path.exists(cache_file):
-        return cache_file
-    return None
+    if not cache_file.is_file():
+        return None
+    return cache_file
 
 class Script(scripts.Script):
     anime_face_detector = None
@@ -165,7 +162,7 @@ class Script(scripts.Script):
 
     def detect_face_from_img(self, img_array):
         if not self.face_detector:
-            dnn_model_path = autocrop.download_and_cache_models(os.path.join(models_path, "opencv"))
+            dnn_model_path = autocrop.download_and_cache_models(models_path / "opencv")
             self.face_detector = cv2.FaceDetectorYN.create(dnn_model_path, "", (0, 0))
         
         self.face_detector.setInputSize((img_array.shape[1], img_array.shape[0]))
@@ -179,9 +176,9 @@ class Script(scripts.Script):
             if 'models' in sys.modules:
                 del sys.modules['models']
 
-            anime_model_path = download_and_cache_models(os.path.join(models_path, "yolov5_anime"))
+            anime_model_path = download_and_cache_models(models_path / "yolov5_anime")
 
-            if not os.path.isfile(anime_model_path):
+            if not anime_model_path.is_file():
                 print( "WARNING!! " + anime_model_path + " not found.")
                 print( "use YuNet instead.")
                 return self.detect_face_from_img(img_array)
@@ -255,11 +252,11 @@ class Script(scripts.Script):
             cv2.imwrite(output, img)
         
         if self.face_merge_mask_image is None:
-            mask_file_path = os.path.join( get_my_dir() , self.face_merge_mask_filename)
-            if not os.path.isfile(mask_file_path):
+            mask_file_path = get_my_dir() / self.face_merge_mask_filename
+            if not omask_file_path.is_file():
                 create_mask( mask_file_path, 0.9, 0.9, 91)
 
-            m = cv2.imread( mask_file_path )[:,:,0]
+            m = cv2.imread(str(mask_file_path) )[:,:,0]
             m = m[:, :, np.newaxis]
             self.face_merge_mask_image = m / 255
 
@@ -389,18 +386,17 @@ class Script(scripts.Script):
         return proc
 
     def get_depth_map(self, mask, depth_path ,img_basename, is_invert_mask):
-        depth_img_path = os.path.join( depth_path , img_basename )
+        depth_img_path = depth_path / img_basename
 
         depth = None
 
-        if os.path.isfile( depth_img_path ):
-            depth = Image.open(depth_img_path)
+        if depth_img_path.is_file():
+            depth = Image.open(str(depth_img_path))
         else:
             # try 00001-0000.png
-            os.path.splitext(img_basename)[0]
-            depth_img_path = os.path.join( depth_path , os.path.splitext(img_basename)[0] + "-0000.png" )
-            if os.path.isfile( depth_img_path ):
-                depth = Image.open(depth_img_path)
+            depth_img_path = depth_path / (img_basename.stem + "-0000.png")
+            if depth_img_path.is_file():
+                depth = Image.open(str(depth_img_path))
         
         if depth:
             if mask:
@@ -414,11 +410,11 @@ class Script(scripts.Script):
 
                 depth = Image.fromarray(depth_array)
 
-                tmp_path = os.path.join( depth_path , "tmp" )
-                os.makedirs(tmp_path, exist_ok=True)
-                tmp_path = os.path.join( tmp_path , img_basename )
+                tmp_path = depth_path / "tmp"
+                tmp_path.mkdir(exist_ok=True)
+                tmp_path = tmp_path / img_basename
                 depth_array = depth_array.astype(np.uint16)
-                cv2.imwrite(tmp_path, depth_array)
+                cv2.imwrite(str(tmp_path), depth_array)
 
             mask = depth
         
@@ -457,17 +453,15 @@ class Script(scripts.Script):
         try:
             deepbooru.model.start()
 
-            for img,mask in zip(imgs,masks):
-                key = os.path.basename(img)
+            for img, mask in zip(imgs,masks):
                 print(key + " interrogate deepdanbooru")
 
-                image = Image.open(img)
-                mask_image = Image.open(mask) if mask else None
+                image = Image.open(img.name)
+                mask_image = Image.open(str(mask)) if mask else None
                 image = self.get_masked_image(image, mask_image)
-
                 prompt = deepbooru.model.tag_multi(image)
+                prompts_dict[img.name] = prompt
 
-                prompts_dict[key] = prompt
         except Exception as e:
             import traceback
             traceback.print_exc()
@@ -501,11 +495,10 @@ class Script(scripts.Script):
                 shared.interrogator.load()
 
             for img,mask in zip(imgs,masks):
-                key = os.path.basename(img)
-                print(key + " generate caption")
+                print(img.name + " generate caption")
 
-                image = Image.open(img)
-                mask_image = Image.open(mask) if mask else None
+                image = Image.open(str(img))
+                mask_image = Image.open(str(mask)) if mask else None
                 image = self.get_masked_image(image, mask_image)
 
                 caption = shared.interrogator.generate_caption(image)
@@ -515,11 +508,10 @@ class Script(scripts.Script):
             devices.torch_gc()
 
             for img,mask,caption in zip(imgs,masks,caption_list):
-                key = os.path.basename(img)
-                print(key + " interrogate clip")
+                print(img.name + " interrogate clip")
 
-                image = Image.open(img)
-                mask_image = Image.open(mask) if mask else None
+                image = Image.open(str(img))
+                mask_image = Image.open(str(mask)) if mask else None
                 image = self.get_masked_image(image, mask_image)
 
                 clip_image = shared.interrogator.clip_preprocess(image).unsqueeze(0).type(shared.interrogator.dtype).to(devices.device_interrogate)
@@ -573,8 +565,8 @@ class Script(scripts.Script):
         return result_list
 
     def remove_blacklisted_token(self, token_list):
-        black_list_path = os.path.join(self.prompts_dir, "blacklist.txt") 
-        if not os.path.isfile(black_list_path):
+        black_list_path = self.prompts_dir / "blacklist.txt"
+        if not black_list_path.is_file():
             print(black_list_path + " not found.")
             return token_list
 
@@ -593,8 +585,8 @@ class Script(scripts.Script):
         return token_list
 
     def add_token(self, token_list):
-        add_list_path = os.path.join(self.prompts_dir, "add_token.txt") 
-        if not os.path.isfile(add_list_path):
+        add_list_path = self.prompts_dir / "add_token.txt"
+        if not add_list_path.is_file():
             print(add_list_path + " not found.")
 
             if self.add_tag_replace_underscore:
@@ -713,8 +705,8 @@ class Script(scripts.Script):
         return prompts_dict
 
     def load_prompts_dict(self, imgs, default_token):
-        prompts_path = os.path.join(self.prompts_dir, "prompts.txt") 
-        if not os.path.isfile(prompts_path):
+        prompts_path =  self.prompts_dir / "prompts.txt"
+        if not prompts_path.is_file():
             print(prompts_path + " not found.")
             return {}
         
@@ -727,7 +719,7 @@ class Script(scripts.Script):
             raw_dict = json.load(f)
             prev_value = default_token
             for img in imgs:
-                key = os.path.basename(img)
+                key = img.name
 
                 if key in raw_dict:
                     prompts_dict[key] = raw_dict[key]
@@ -753,17 +745,19 @@ class Script(scripts.Script):
     def run(self, p, project_dir, generation_test, mask_mode, inpaint_area, use_depth, img2img_repeat_count, inc_seed, auto_tag_mode, add_tag_to_head, add_tag_replace_underscore, is_facecrop, face_detection_method, face_crop_resolution, max_crop_size, face_denoising_strength, face_area_magnification, enable_face_prompt, face_prompt, controlnet_weight, controlnet_weight_for_face, disable_facecrop_lpbk_last_time, use_preprocess_img):
         args = locals()
 
+        project_dir = Path(project_dir)
+
         if generation_test:
             print("generation_test")
-            test_proj_dir = os.path.join( get_my_dir() , "generation_test_proj")
-            os.makedirs(test_proj_dir, exist_ok=True)
-            test_video_key_path = os.path.join( test_proj_dir , "video_key")
-            os.makedirs(test_video_key_path, exist_ok=True)
-            test_video_mask_path = os.path.join( test_proj_dir , "video_mask")
-            os.makedirs(test_video_mask_path, exist_ok=True)
+            test_proj_dir = Path(get_my_dir()) / "generation_test_proj"
+            test_proj_dir.mkdir(exist_ok=True)
+            test_video_key_path = test_proj_dir / "video_key"
+            test_video_key_path.mkdir(exist_ok=True)
+            test_video_mask_path = test_proj_dir / "video_mask"
+            test_video_mask_path.mkdir(exist_ok=True)
 
-            controlnet_input_path = os.path.join(test_proj_dir, "controlnet_input")
-            if os.path.isdir(controlnet_input_path):
+            controlnet_input_path = test_proj_dir / "controlnet_input"
+            if controlnet_input_path.is_dir():
                 shutil.rmtree(controlnet_input_path)
 
             remove_pngs_in_dir(test_video_key_path)
@@ -773,13 +767,13 @@ class Script(scripts.Script):
             test_mask = p.image_mask
 
             if test_base_img:
-                test_base_img.save( os.path.join( test_video_key_path , "00001.png") )
+                test_base_img.save(test_video_key_path / "00001.png")
             if test_mask:
-                test_mask.save( os.path.join( test_video_mask_path , "00001.png") )
+                test_mask.save(test_video_mask_path / "00001.png")
             
             project_dir = test_proj_dir
         else:
-            if not os.path.isdir(project_dir):
+            if not project_dir.is_dir():
                 print("project_dir not found")
                 return Processed()
         
@@ -794,6 +788,7 @@ class Script(scripts.Script):
 
         if mask_mode == "Normal":
             p.inpainting_mask_invert = 0
+
         elif mask_mode == "Invert":
             # mask already inverted
             p.inpainting_mask_invert = 0
@@ -804,76 +799,56 @@ class Script(scripts.Script):
         is_invert_mask = False
         if mask_mode == "Invert":
             is_invert_mask = True
-
-            inv_path = os.path.join(project_dir, "inv")
-            if not os.path.isdir(inv_path):
+            project_dir = project_dir / "inv"
+            if not project_dir.is_dir():
                 print("project_dir/inv not found")
                 return Processed()
-            
-            org_key_path = os.path.join(inv_path, "video_key")
-            img2img_key_path = os.path.join(inv_path, "img2img_key")
-            depth_path = os.path.join(inv_path, "video_key_depth")
 
-            preprocess_path = os.path.join(inv_path, "controlnet_preprocess")
+        org_key_path = project_dir / "video_key"
+        img2img_key_path = project_dir / "img2img_key"
+        depth_path = project_dir / "video_key_depth"
 
-            controlnet_input_path = os.path.join(inv_path, "controlnet_input")
+        preprocess_path = project_dir / "controlnet_preprocess"
 
-            self.prompts_dir = inv_path
-            self.is_invert_mask = True
+        controlnet_input_path = project_dir / "controlnet_input"
 
-            frame_mask_path = os.path.join(inv_path, "inv_video_mask")
-        else:
-            org_key_path = os.path.join(project_dir, "video_key")
-            img2img_key_path = os.path.join(project_dir, "img2img_key")
-            depth_path = os.path.join(project_dir, "video_key_depth")
+        self.prompts_dir = project_dir
+        self.is_invert_mask = False
 
-            preprocess_path = os.path.join(project_dir, "controlnet_preprocess")
-
-            controlnet_input_path = os.path.join(project_dir, "controlnet_input")
-
-            self.prompts_dir = project_dir
-            self.is_invert_mask = False
-
-            frame_mask_path = os.path.join(project_dir, "video_mask")
+        frame_mask_path = project_dir / "video_mask"
 
         if not use_depth:
             depth_path = None
 
-        if not os.path.isdir(org_key_path):
-            print(org_key_path + " not found")
+        if not org_key_path.is_dir():
+            print(f"{org_key_path} not found")
             print("Generate key frames first." if is_invert_mask == False else \
                     "Generate key frames first.(with [Ebsynth Utility] Tab -> [configuration] -> [etc]-> [Mask Mode] = Invert setting)")
             return Processed()
 
-        if not os.path.isdir(controlnet_input_path):
-            print(controlnet_input_path + " not found")
-            print("copy {0} -> {1}".format(org_key_path,controlnet_input_path))
+        if not controlnet_input_path.is_dir():
+            print(f"{controlnet_input_path} not found")
+            print(f"copy {org_key_path} -> {controlnet_input_path}")
 
-            os.makedirs(controlnet_input_path, exist_ok=True)
+            controlnet_input_path.mkdir(exist_ok=True)
 
-            imgs = glob.glob( os.path.join(org_key_path ,"*.png") )
+            imgs = org_key_path.glob("*.png")
             for img in imgs:
-                img_basename = os.path.basename(img)
-                shutil.copy( img , os.path.join(controlnet_input_path, img_basename) )
+                shutil.copy(img , controlnet_input_path / img.name)
 
         remove_pngs_in_dir(img2img_key_path)
-        os.makedirs(img2img_key_path, exist_ok=True)
-
+        img2img_key_path.mkdir(exist_ok=True)
 
         def get_mask_of_img(img):
-            img_basename = Path(img)
-            
             if mask_mode != "None":
-                mask_path = os.path.join( frame_mask_path , img_basename.name )
-                if os.path.isfile( mask_path ):
+                mask_path = frame_mask_path / img.name
+                if mask_path.is_file():
                     return mask_path
             return ""
         
         def get_pair_of_img(img, target_dir):
-            img_basename = os.path.basename(img)
-            
-            pair_path = os.path.join( target_dir , img_basename )
-            if os.path.isfile( pair_path ):
+            pair_path = target_dir / img.name
+            if pair_path.is_file():
                 return pair_path
             print("!!! pair of "+ img + " not in " + target_dir)
             return ""
@@ -884,29 +859,30 @@ class Script(scripts.Script):
                 pair_img = get_pair_of_img(img, org_key_path)
             return pair_img
         
-        imgs = glob.glob( os.path.join(org_key_path ,"*.png") )
-        masks = [ get_mask_of_img(i) for i in imgs ]
-        controlnet_input_imgs = [ get_controlnet_input_img(i) for i in imgs ]
+        sequences = org_key_path.glob("seq_*")
+        imgs = [sorted(seq.glob('*.png'))[min(len(imgs) - 1, 1)] for seq in sequences]
+        masks = [get_mask_of_img(i) for i in imgs]
+        controlnet_input_imgs = [get_controlnet_input_img(i) for i in imgs]
 
         for mask in masks:
-            m = cv2.imread(mask) if mask else None
+            m = cv2.imread(str(mask)) if mask else None
             if m is not None:
                 if m.max() == 0:
-                    print("{0} blank mask found".format(mask))
+                    print(f"{mask} blank mask found")
                     if m.ndim == 2:
                         m[0,0] = 255
                     else:
                         m = m[:,:,:3]
                         m[0,0,0:3] = 255
-                    cv2.imwrite(mask, m)
+                    cv2.imwrite(str(mask), m)
 
         ######################
         # face crop
         face_coords_dict={}
-        for img, mask in zip(imgs,masks):
+        for img, mask in zip(imgs, masks):
             face_detected = False
             if is_facecrop:
-                image = Image.open(img)
+                image = Image.open(str(img))
                 mask_image = Image.open(mask) if mask else None
                 face_coords = self.detect_face(image, mask_image, face_detection_method, max_crop_size)
                 if face_coords is None or len(face_coords) == 0:
@@ -915,10 +891,9 @@ class Script(scripts.Script):
                     print("face detected")
                     face_detected = True
             
-            key = os.path.basename(img)
-            face_coords_dict[key] = face_coords if face_detected else []
+            face_coords_dict[img.name] = face_coords if face_detected else []
 
-        with open( os.path.join( project_dir if is_invert_mask == False else inv_path,"faces.txt" ), "w") as f:
+        with open((project_dir if is_invert_mask == False else inv_path) / "faces.txt", "w") as f:
             f.write(json.dumps(face_coords_dict,indent=4))
 
         ######################
@@ -934,31 +909,30 @@ class Script(scripts.Script):
 
             else:
                 for img in imgs:
-                    key = os.path.basename(img)
-                    prompts_dict[key] = p.prompt
+                    prompts_dict[img.name] = p.prompt
             
-        with open( os.path.join( project_dir if is_invert_mask == False else inv_path, time.strftime("%Y%m%d-%H%M%S_") + "prompts.txt" ), "w") as f:
+        with open((project_dir if is_invert_mask == False else inv_path) / (time.strftime("%Y%m%d-%H%M%S_") + "prompts.txt" ), "w") as f:
             f.write(json.dumps(prompts_dict,indent=4))
 
 
         ######################
         # img2img
-        for img, mask, controlnet_input_img, face_coords, prompts in tzip(imgs, masks, controlnet_input_imgs, face_coords_dict.values(), prompts_dict.values()):
+        for img, mask, controlnet_input_img in tzip(imgs, masks, controlnet_input_imgs):
+            face_coords = face_coords_dict[img.name]
+            prompts = prompts_dict[img.name]
 
             # Generation cancelled.
             if shared.state.interrupted:
                 print("Generation cancelled.")
                 break
 
-            image = Image.open(img)
+            image = Image.open(str(img))
             mask_image = Image.open(mask) if mask else None
-
-            img_basename = os.path.basename(img)
 
             # empty mask
             print('max mask', np.max(mask_image))
             if np.max(mask_image) == 0:
-                image.save( os.path.join( img2img_key_path , img_basename))
+                image.save(str(img2img_key_path / img.name))
                 continue
             
             _p = copy.copy(p)
@@ -972,7 +946,7 @@ class Script(scripts.Script):
             
             if mask_mode != "None" or use_depth:
                 if use_depth:
-                    depth_found, _p.image_mask = self.get_depth_map( mask_image, depth_path ,img_basename, is_invert_mask )
+                    depth_found, _p.image_mask = self.get_depth_map( mask_image, depth_path ,img.name, is_invert_mask )
                     mask_image = _p.image_mask
                     if depth_found:
                         _p.inpainting_mask_invert = 0
@@ -981,9 +955,9 @@ class Script(scripts.Script):
             controlnet_input_base_img = Image.open(controlnet_input_img) if controlnet_input_img else None
 
             if use_preprocess_img:
-                preprocess_img = os.path.join(preprocess_path, img_basename)
-                if os.path.isfile( preprocess_img ):
-                    controlnet_input_base_img = Image.open(preprocess_img)
+                preprocess_img = preprocess_path / img.name
+                if preprocess_img.is_file():
+                    controlnet_input_base_img = Image.open(str(preprocess_img))
                     preprocess_img_exist = True
 
             if face_coords:
@@ -1013,11 +987,11 @@ class Script(scripts.Script):
                     _p.image_mask = resized_mask
                     _p.seed += inc_seed
 
-            proc.images[0].save( os.path.join( img2img_key_path , img_basename ) )
+            proc.images[0].save( str(img2img_key_path / img.name))
 
-        with open( os.path.join( project_dir if is_invert_mask == False else inv_path,"param.txt" ), "w") as f:
+        with open((project_dir if is_invert_mask == False else inv_path) / "param.txt" , "w") as f:
             f.write(pprint.pformat(proc.info))
-        with open( os.path.join( project_dir if is_invert_mask == False else inv_path ,"args.txt" ), "w") as f:
+        with open((project_dir if is_invert_mask == False else inv_path) / "args.txt" , "w") as f:
             f.write(pprint.pformat(args))
 
         return proc

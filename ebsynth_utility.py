@@ -62,7 +62,7 @@ def ebsynth_utility_process(stage_index: int, project_dir:str, original_movie_pa
 
     # if is_invert_mask:
     back_path = os.path.join(project_dir, "inv")
-    back_mask_path = os.path.join(back_path, "inv_video_mask")
+    back_mask_path = os.path.join(back_path, "video_mask")
 
     os.makedirs(back_path, exist_ok=True)
 
