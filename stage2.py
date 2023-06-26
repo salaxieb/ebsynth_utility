@@ -76,13 +76,6 @@ def ebsynth_utility_stage2(
     dbg.print("stage2")
     dbg.print("")
 
-    original_movie_path, frame_path, frame_mask_path, org_key_path = (
-        Path(original_movie_path),
-        Path(frame_path),
-        Path(frame_mask_path),
-        Path(org_key_path),
-    )
-
     for folder in org_key_path.glob("seq_*"):
         folder.unlink()
 

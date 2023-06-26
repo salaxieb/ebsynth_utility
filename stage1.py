@@ -167,6 +167,7 @@ def create_mask_transparent_background(
     venv = "venv"
     if "VIRTUAL_ENV" in os.environ:
         venv = os.environ["VIRTUAL_ENV"]
+
     bin_path = Path(venv) / "Scripts"
     bin_path = bin_path / "transparent-background"
 
@@ -233,12 +234,6 @@ def ebsynth_utility_stage1(
         return
 
     project_dir, original_movie_path, frame_path, frame_mask_path, *args = project_args
-    project_dir, original_movie_path, frame_path, frame_mask_path = (
-        Path(project_dir),
-        Path(original_movie_path),
-        Path(frame_path),
-        Path(frame_mask_path),
-    )
 
     if is_invert_mask:
         if frame_path.is_dir() and frame_mask_path.is_dir():

@@ -181,8 +181,6 @@ def ebsynth_utility_stage5(
     dbg.print("stage5")
     dbg.print("")
 
-    # project_dir, _, frame_path, frame_mask_path, _, img2img_key_path, img2img_upscale_key_path, _, back_img2img_key_path, back_img2img_upscale_key_path = project_args
-
     if not project_dir.is_dir():
         dbg.print("project_dir : no such dir %s" % project_dir)
         return

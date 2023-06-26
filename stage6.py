@@ -16,11 +16,6 @@ def ebsynth_utility_stage6(
     dbg.print("stage6")
     dbg.print("")
 
-    project_dir = Path(project_dir)
-    frames_path = Path(frames_path)
-    style = Path(style_frames_path)
-    masks_path = Path(masks_path)
-
     all_frames = natsorted(list(frames_path.glob("*.png")))
     # all_frames = [frame.stem for frame in all_frames]
 
