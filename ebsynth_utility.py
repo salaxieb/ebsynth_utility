@@ -61,6 +61,8 @@ def ebsynth_utility_process(
     key_max_gap: int,
     key_th: float,
     key_add_last_frame: bool,
+    size_threshold: float,
+    mask_size_threshold: float,
     color_matcher_method: str,
     st3_5_use_mask: bool,
     st3_5_use_mask_ref: bool,
@@ -164,10 +166,8 @@ def ebsynth_utility_process(
             frame_path,
             frame_mask_path,
             org_key_path,
-            key_min_gap,
-            key_max_gap,
-            key_th,
-            key_add_last_frame,
+            size_threshold,
+            mask_size_threshold,
             False,
         )
         ebsynth_utility_stage2(
@@ -176,10 +176,8 @@ def ebsynth_utility_process(
             frame_path,
             back_mask_path,
             back_org_key_path,
-            key_min_gap,
-            key_max_gap,
-            key_th,
-            key_add_last_frame,
+            size_threshold,
+            mask_size_threshold,
             True,
         )
 
@@ -202,17 +200,13 @@ def ebsynth_utility_process(
         dbg.print("2. Select [ebsynth utility] in the script combo box")
         dbg.print(f'3. Fill in the "Project directory" field with [ {project_dir} ]')
         dbg.print(
-            '4. Select in the "Mask Mode(Override img2img Mask mode)" field with ['
-            + ("Invert" if is_invert_mask else "Normal")
-            + "]"
+            f"4. Select in the 'Mask Mode(Override img2img Mask mode)' field with [{'Invert' if is_invert_mask else 'Normal'}]"
         )
         dbg.print(
-            '5. I recommend to fill in the "Width" field with [' + str(img_width) + "]"
+            f'5. I recommend to fill in the "Width" field with [{img_width}]'
         )
         dbg.print(
-            '6. I recommend to fill in the "Height" field with ['
-            + str(img_height)
-            + "]"
+            f'6. I recommend to fill in the "Height" field with [{img_height}]'
         )
         dbg.print(
             '7. I recommend to fill in the "Denoising strength" field with lower than 0.35'
@@ -304,16 +298,8 @@ def ebsynth_utility_process(
         dbg.print("")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         dbg.print("Running ebsynth.(on your self)")
-        dbg.print(
-            "Open the generated .ebs under %s and press [Run All] button."
-            % (project_dir)
-        )
-        dbg.print(
-            "If "
-            "out-*"
-            " directory already exists in the %s, delete it manually before executing."
-            % (project_dir)
-        )
+        dbg.print(f"Open the generated .ebs under {project_dir} and press [Run All] button.")
+        dbg.print(f"If out-* directory already exists in the {project_dir}, delete it manually before executing.")
         dbg.print("If multiple .ebs files are generated, run them all.")
         dbg.print("(I recommend associating the .ebs file with EbSynth.exe.)")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")

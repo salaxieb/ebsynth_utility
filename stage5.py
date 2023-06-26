@@ -188,7 +188,7 @@ def ebsynth_utility_stage5(
         dbg.print("frame_path : no such dir %s" % frame_path)
         return
 
-    no_upscale = False
+    upscale = True
 
     if not img2img_upscale_key_path.is_dir():
         dbg.print(
@@ -210,7 +210,7 @@ def ebsynth_utility_stage5(
             % img2img_key_path
         )
         img2img_upscale_key_path = img2img_key_path
-        no_upscale = True
+        upscale = False
 
     else:
         rename_keys(img2img_upscale_key_path)
@@ -251,7 +251,7 @@ def ebsynth_utility_stage5(
         "proj_dir": project_dir,
         "file_name": "/[" + "#" * number_of_digits + "].png",
         "number_of_digits": number_of_digits,
-        "key_dir": "img2img_upscale_key" if no_upscale == False else "img2img_key",
+        "key_dir": "img2img_upscale_key" if upscale else "img2img_key",
         "video_dir": relative_video_dir,
         "mask_dir": relative_mask_dir,
         "key_weight": 1.0,

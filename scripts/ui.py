@@ -154,7 +154,20 @@ def on_ui_tabs():
                                     key_add_last_frame = gr.Checkbox(
                                         label="Add last frame to keyframes", value=True
                                     )
-
+                                    size_threshold = gr.Slider(
+                                        minimum=0,
+                                        maximum=1,
+                                        step=0.01,
+                                        label="size difference threshols (min / max coefficient)",
+                                        value=0.85,
+                                    )
+                                    mask_size_threshold = gr.Slider(
+                                        minimum=0,
+                                        maximum=1,
+                                        step=0.01,
+                                        label="mask size difference threshols (min / max coefficient)",
+                                        value=0.8,
+                                    )
                                 with gr.TabItem(
                                     label="stage 3.5",
                                     elem_id="ebs_configuration_tab3_5",
@@ -370,6 +383,8 @@ def on_ui_tabs():
                     key_max_gap,
                     key_th,
                     key_add_last_frame,
+                    size_threshold,
+                    mask_size_threshold,
                     color_matcher_method,
                     st3_5_use_mask,
                     st3_5_use_mask_ref,

@@ -15,15 +15,15 @@ def get_jpg_size(filename):
 
 
 def analyze_key_frames(
-    png_dir, mask_dir, th, min_gap, max_gap, add_last_frame, is_invert_mask
+    png_dir, mask_dir, size_threshold, mask_size_threshold,is_invert_mask
 ):
     # correct = [(1, 33), (34, 69), (70, 76), (77, 101), (102, 111), (112, 118), (119, 125)]
     keys = []
 
     frames = sorted(png_dir.glob("[0-9]*.png"))
 
-    threshold = 0.85
-    mask_threshold = 0.8
+    threshold = size_threshold
+    mask_threshold = mask_size_threshold
     prev_img_size = get_jpg_size(frames[0])
     prev_mask_size = get_jpg_size(mask_dir / frames[0].name)
     seq_start = frames[0].stem
@@ -67,31 +67,23 @@ def ebsynth_utility_stage2(
     frame_path,
     frame_mask_path,
     org_key_path,
-    key_min_gap,
-    key_max_gap,
-    key_th,
-    key_add_last_frame,
+    size_threshold,
+    mask_size_threshold,
     is_invert_mask,
 ):
     dbg.print("stage2")
     dbg.print("")
 
     for folder in org_key_path.glob("seq_*"):
-        folder.unlink()
+        shutil.rmtree(folder)
 
     remove_pngs_in_dir(org_key_path)
-
-    dbg.print(f"key_min_gap: {key_min_gap}")
-    dbg.print(f"key_max_gap: {key_max_gap}")
-    dbg.print(f"key_th: {key_th}")
 
     keys = analyze_key_frames(
         frame_path,
         frame_mask_path,
-        key_th,
-        key_min_gap,
-        key_max_gap,
-        key_add_last_frame,
+        size_threshold,
+        mask_size_threshold,
         is_invert_mask,
     )
 
@@ -111,7 +103,7 @@ def ebsynth_utility_stage2(
         shutil.copy(frame_path / filename, save_path / filename)
 
     dbg.print("")
-    dbg.print("Keyframes are output to [" + str(org_key_path) + "]")
+    dbg.print(f'Keyframes are output to [{org_key_path}]')
     dbg.print("")
     dbg.print(
         "[Ebsynth Utility]->[configuration]->[stage 2]->[Threshold of delta frame edge]"
@@ -121,7 +113,7 @@ def ebsynth_utility_stage2(
     )
     dbg.print("")
     dbg.print("If you do not like the selection, you can modify it manually.")
-    dbg.print("(Delete keyframe, or Add keyframe from [" + str(frame_path) + "])")
+    dbg.print(f"(Delete keyframe, or Add keyframe from [{frame_path}])")
 
     dbg.print("")
     dbg.print("completed.")
