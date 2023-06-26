@@ -34,18 +34,7 @@ def create_movie_from_frames(
 
     # ffmpeg -r 10 -start_number n -i snapshot_%03d.png -vframes 50 example.gif
     subprocess.call(
-        "ffmpeg -framerate "
-        + str(fps)
-        + " -r "
-        + str(fps)
-        + " -start_number "
-        + str(start)
-        + " -i "
-        + str(path)
-        + " -vframes "
-        + str(vframes)
-        + get_export_str(export_type)
-        + output_path,
+        f"ffmpeg -framerate {fps} -r {fps} -start_number {start} -i {path} -vframes {vframes}{get_export_str(export_type)}{output_path}",
         shell=True,
     )
 
@@ -91,7 +80,7 @@ def ebsynth_utility_stage7_5(
     dbg.print("")
 
     fps = 30
-    clip = cv2.VideoCapture(original_movie_path)
+    clip = cv2.VideoCapture(str(original_movie_path))
     if clip:
         fps = clip.get(cv2.CAP_PROP_FPS)
         clip.release()
@@ -140,7 +129,7 @@ def ebsynth_utility_stage7_5(
             if trying_to_add_audio(
                 original_movie_path, filename, with_snd_path, project_dir
             ):
-                dbg.print("exported : " + with_snd_path)
+                dbg.print(f"exported : {with_snd_path}")
 
     # movie only from front frames
     create_movie_with_sound(front_frames, postfix="_front")

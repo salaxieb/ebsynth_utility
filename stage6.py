@@ -19,7 +19,7 @@ def ebsynth_utility_stage6(
     all_frames = natsorted(list(frames_path.glob("*.png")))
     # all_frames = [frame.stem for frame in all_frames]
 
-    key_style_frames = natsorted(list(style.glob("*.png")))
+    key_style_frames = natsorted(list(style_frames_path.glob("*.png")))
     org_key_path = project_dir / "video_key"
     sequences = natsorted(org_key_path.glob("seq_*"))
     out_dir_name = project_dir / f"out"

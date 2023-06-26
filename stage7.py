@@ -55,8 +55,6 @@ def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
 
     dbg.print("stage7")
     dbg.print("")
-    blend_rate = clamp(blend_rate, 0.0, 1.0)
-    dbg.print("blend_rate: {}".format(blend_rate))
 
     dbg.print("")
     dbg.print("completed.")

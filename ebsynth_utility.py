@@ -200,7 +200,7 @@ def ebsynth_utility_process(
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         dbg.print("1. Go to img2img tab")
         dbg.print("2. Select [ebsynth utility] in the script combo box")
-        dbg.print('3. Fill in the "Project directory" field with [' + project_dir + "]")
+        dbg.print(f'3. Fill in the "Project directory" field with [ {project_dir} ]')
         dbg.print(
             '4. Select in the "Mask Mode(Override img2img Mask mode)" field with ['
             + ("Invert" if is_invert_mask else "Normal")
@@ -227,7 +227,7 @@ def ebsynth_utility_process(
             "9. Drop any image onto the img2img main screen. This is necessary to avoid errors, but does not affect the results of img2img."
         )
         dbg.print("10. Generate")
-        dbg.print("(Images are output to [" + img2img_key_path + "])")
+        dbg.print(f"(Images are output to [{img2img_key_path}])")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         return process_end(dbg, "")
 
@@ -248,7 +248,7 @@ def ebsynth_utility_process(
         img_height, img_width, _ = cv2.imread(str(sample_image)).shape
 
         sample_img2img_key = list(img2img_key_path.glob("*.png"))[0]
-        img_height_key, img_width_key, _ = cv2.imread(sample_img2img_key).shape
+        img_height_key, img_width_key, _ = cv2.imread(str(sample_img2img_key)).shape
 
         dbg.print("stage 4")
         dbg.print("")
@@ -262,37 +262,18 @@ def ebsynth_utility_process(
         dbg.print("0. Enable the following item")
         dbg.print("Settings ->")
         dbg.print("  Saving images/grids ->")
-        dbg.print(
-            "    Use original name for output filename during batch process in extras tab"
-        )
+        dbg.print("    Use original name for output filename during batch process in extras tab")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        dbg.print(
-            '1. If "img2img_upscale_key" directory already exists in the %s, delete it manually before executing.'
-            % (project_dir)
-        )
+        dbg.print(f'1. If "img2img_upscale_key" directory already exists in the {project_dir}, delete it manually before executing.')
         dbg.print("2. Go to Extras tab")
         dbg.print("3. Go to Batch from Directory tab")
-        dbg.print(
-            '4. Fill in the "Input directory" field with [' + img2img_key_path + "]"
-        )
-        dbg.print(
-            '5. Fill in the "Output directory" field with ['
-            + img2img_upscale_key_path
-            + "]"
-        )
-        dbg.print(
-            '4. Fill in the "Input directory" field with ['
-            + back_img2img_key_path
-            + "]"
-        )
-        dbg.print(
-            '5. Fill in the "Output directory" field with ['
-            + back_img2img_upscale_key_path
-            + "]"
-        )
+        dbg.print(f'4. Fill in the "Input directory" field with [{img2img_key_path}]')
+        dbg.print(f'5. Fill in the "Output directory" field with [{img2img_upscale_key_path}]')
+        dbg.print(f'4. Fill in the "Input directory" field with [{back_img2img_key_path}]')
+        dbg.print(f'5. Fill in the "Output directory" field with [{back_img2img_upscale_key_path}]')
         dbg.print("6. Go to Scale to tab")
-        dbg.print('7. Fill in the "Width" field with [' + str(img_width) + "]")
-        dbg.print('8. Fill in the "Height" field with [' + str(img_height) + "]")
+        dbg.print(f'7. Fill in the "Width" field with [{img_width}]')
+        dbg.print(f'8. Fill in the "Height" field with [{img_height}]')
         dbg.print("9. Fill in the remaining configuration fields of Upscaler.")
         dbg.print("10. Generate")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
