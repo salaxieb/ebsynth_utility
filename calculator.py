@@ -1,5 +1,6 @@
 # https://www.mycompiler.io/view/3TFZagC
 
+
 class ParseError(Exception):
     def __init__(self, pos, msg, *args):
         self.pos = pos
@@ -7,7 +8,8 @@ class ParseError(Exception):
         self.args = args
 
     def __str__(self):
-        return '%s at position %s' % (self.msg % self.args, self.pos)
+        return "%s at position %s" % (self.msg % self.args, self.pos)
+
 
 class Parser:
     def __init__(self):
@@ -25,8 +27,8 @@ class Parser:
         if self.pos < self.len:
             raise ParseError(
                 self.pos + 1,
-                'Expected end of string but got %s',
-                self.text[self.pos + 1]
+                "Expected end of string but got %s",
+                self.text[self.pos + 1],
             )
 
     def eat_whitespace(self):
@@ -44,11 +46,11 @@ class Parser:
         length = len(chars)
 
         while index < length:
-            if index + 2 < length and chars[index + 1] == '-':
+            if index + 2 < length and chars[index + 1] == "-":
                 if chars[index] >= chars[index + 2]:
-                    raise ValueError('Bad character range')
+                    raise ValueError("Bad character range")
 
-                rv.append(chars[index:index + 3])
+                rv.append(chars[index : index + 3])
                 index += 3
             else:
                 rv.append(chars[index])
@@ -61,8 +63,8 @@ class Parser:
         if self.pos >= self.len:
             raise ParseError(
                 self.pos + 1,
-                'Expected %s but got end of string',
-                'character' if chars is None else '[%s]' % chars
+                "Expected %s but got end of string",
+                "character" if chars is None else "[%s]" % chars,
             )
 
         next_char = self.text[self.pos + 1]
@@ -81,18 +83,16 @@ class Parser:
 
         raise ParseError(
             self.pos + 1,
-            'Expected %s but got %s',
-            'character' if chars is None else '[%s]' % chars,
-            next_char
+            "Expected %s but got %s",
+            "character" if chars is None else "[%s]" % chars,
+            next_char,
         )
 
     def keyword(self, *keywords):
         self.eat_whitespace()
         if self.pos >= self.len:
             raise ParseError(
-                self.pos + 1,
-                'Expected %s but got end of string',
-                ','.join(keywords)
+                self.pos + 1, "Expected %s but got end of string", ",".join(keywords)
             )
 
         for keyword in keywords:
@@ -106,8 +106,8 @@ class Parser:
 
         raise ParseError(
             self.pos + 1,
-            'Expected %s but got %s',
-            ','.join(keywords),
+            "Expected %s but got %s",
+            ",".join(keywords),
             self.text[self.pos + 1],
         )
 
@@ -139,9 +139,9 @@ class Parser:
         else:
             raise ParseError(
                 last_error_pos,
-                'Expected %s but got %s',
-                ','.join(last_error_rules),
-                self.text[last_error_pos]
+                "Expected %s but got %s",
+                ",".join(last_error_rules),
+                self.text[last_error_pos],
             )
 
     def maybe_char(self, chars=None):
@@ -162,19 +162,20 @@ class Parser:
         except ParseError:
             return None
 
+
 class CalcParser(Parser):
     def start(self):
         return self.expression()
 
     def expression(self):
-        rv = self.match('term')
+        rv = self.match("term")
         while True:
-            op = self.maybe_keyword('+', '-')
+            op = self.maybe_keyword("+", "-")
             if op is None:
                 break
 
-            term = self.match('term')
-            if op == '+':
+            term = self.match("term")
+            if op == "+":
                 rv += term
             else:
                 rv -= term
@@ -182,14 +183,14 @@ class CalcParser(Parser):
         return rv
 
     def term(self):
-        rv = self.match('factor')
+        rv = self.match("factor")
         while True:
-            op = self.maybe_keyword('*', '/')
+            op = self.maybe_keyword("*", "/")
             if op is None:
                 break
 
-            term = self.match('factor')
-            if op == '*':
+            term = self.match("factor")
+            if op == "*":
                 rv *= term
             else:
                 rv /= term
@@ -197,41 +198,40 @@ class CalcParser(Parser):
         return rv
 
     def factor(self):
-        if self.maybe_keyword('('):
-            rv = self.match('expression')
-            self.keyword(')')
+        if self.maybe_keyword("("):
+            rv = self.match("expression")
+            self.keyword(")")
 
             return rv
 
-        return self.match('number')
+        return self.match("number")
 
     def number(self):
         chars = []
 
-        sign = self.maybe_keyword('+', '-')
+        sign = self.maybe_keyword("+", "-")
         if sign is not None:
             chars.append(sign)
 
-        chars.append(self.char('0-9'))
+        chars.append(self.char("0-9"))
 
         while True:
-            char = self.maybe_char('0-9')
+            char = self.maybe_char("0-9")
             if char is None:
                 break
 
             chars.append(char)
 
-        if self.maybe_char('.'):
-            chars.append('.')
-            chars.append(self.char('0-9'))
+        if self.maybe_char("."):
+            chars.append(".")
+            chars.append(self.char("0-9"))
 
             while True:
-                char = self.maybe_char('0-9')
+                char = self.maybe_char("0-9")
                 if char is None:
                     break
 
                 chars.append(char)
 
-        rv = float(''.join(chars))
+        rv = float("".join(chars))
         return rv
-

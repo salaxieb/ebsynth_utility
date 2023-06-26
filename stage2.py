@@ -7,7 +7,7 @@ from pathlib import Path
 
 def get_jpg_size(filename):
     img = cv2.imread(str(filename))
-    jpg_filename = Path(filename).with_suffix('.jpg')
+    jpg_filename = Path(filename).with_suffix(".jpg")
     cv2.imwrite(str(jpg_filename), img)
     size = jpg_filename.stat().st_size
     jpg_filename.unlink()
@@ -33,13 +33,16 @@ def analyze_key_frames(
         mask_size = get_jpg_size(mask_dir / frame.name)
         print(frame, min(prev_mask_size, mask_size) / max(prev_mask_size, mask_size))
 
-        if any((
-            min(prev_img_size, im_size) / max(prev_img_size, im_size) < threshold,
-            min(prev_mask_size, mask_size) / max(prev_mask_size, mask_size) < mask_threshold
-        )):
+        if any(
+            (
+                min(prev_img_size, im_size) / max(prev_img_size, im_size) < threshold,
+                min(prev_mask_size, mask_size) / max(prev_mask_size, mask_size)
+                < mask_threshold,
+            )
+        ):
             # this frame begins new sequence
-            keys.append((seq_start, frames[i-1].stem))
-            print('seq_start', int(seq_start), 'seq_end', int(frames[i-1].stem))
+            keys.append((seq_start, frames[i - 1].stem))
+            print("seq_start", int(seq_start), "seq_end", int(frames[i - 1].stem))
             seq_start = frame.stem
         prev_img_size = im_size
         prev_mask_size = mask_size
@@ -73,14 +76,18 @@ def ebsynth_utility_stage2(
     dbg.print("stage2")
     dbg.print("")
 
-    original_movie_path, frame_path, frame_mask_path, org_key_path = Path(original_movie_path), Path(frame_path), Path(frame_mask_path), Path(org_key_path)
+    original_movie_path, frame_path, frame_mask_path, org_key_path = (
+        Path(original_movie_path),
+        Path(frame_path),
+        Path(frame_mask_path),
+        Path(org_key_path),
+    )
 
     for folder in org_key_path.glob("seq_*"):
         folder.unlink()
 
     remove_pngs_in_dir(org_key_path)
 
-    dbg.print(f"fps: {fps}")
     dbg.print(f"key_min_gap: {key_min_gap}")
     dbg.print(f"key_max_gap: {key_max_gap}")
     dbg.print(f"key_th: {key_th}")
@@ -103,7 +110,7 @@ def ebsynth_utility_stage2(
         filename = str(start).zfill(5) + ".png"
         shutil.copy(frame_path / filename, save_path / filename)
 
-        mid = (start + end) // 2
+        mid = (int(start) + int(end)) // 2
         filename = str(mid).zfill(5) + ".png"
         shutil.copy(frame_path / filename, save_path / filename)
 

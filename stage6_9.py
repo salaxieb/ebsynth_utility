@@ -29,7 +29,7 @@
 #     number_of_digits, out_dirs_front = search_out_dirs(project_dir_front, blend_rate)
 #     number_of_digits, out_dirs_back = search_out_dirs(project_dir_back, blend_rate)
 
-    
+
 #     front_frames = Path(project_dir) / "crossfade_tmp"
 #     back_frames = Path(back_path) / "crossfade_tmp"
 #     frame_mask_path = Path(frame_mask_path)
@@ -43,8 +43,6 @@
 #         # if image bdefore keyfrome, join with front
 #         # if image bahind frame, join with one in behind
 #         for frame in range(out_dir_front['start_frame']), key_frame
-
-
 
 
 #     ### create frame imgs
