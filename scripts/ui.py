@@ -284,7 +284,7 @@ def on_ui_tabs():
                                         label="Mask Mode",
                                     )
                                     target_fps = gr.Textbox(
-                                        label="Target FPS", value="24", lines=1
+                                        label="Target FPS", value="10", lines=1
                                     )
 
                     with gr.Column(variant="panel"):
