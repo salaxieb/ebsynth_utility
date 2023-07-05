@@ -14,15 +14,22 @@ def get_jpg_size(filename):
     return size
 
 
-def save_sequence(start: int, end: int, key_max_gap: int):
+def save_sequence(start: int, end: int, key_max_gap: int, org_key_path: Path, frame_path: Path):
     save_path = org_key_path / f"seq_{start}_{end}"
     save_path.mkdir(exist_ok=True, parents=True)
     filename = str(start).zfill(5) + ".png"
     shutil.copy(frame_path / filename, save_path / filename)
 
     # equally splitting whole range of images
+    if key_max_gap == 0:
+        key_max_gap = 1
     steps = (end - start) // key_max_gap
+    if steps == 0:
+        steps = 1
     step = (end - start) // steps
+    # when start and end equal
+    if step == 0:
+        step = 1
 
     for mid in range(start, end, step):
         filename = str(mid).zfill(5) + ".png"
@@ -33,7 +40,7 @@ def save_sequence(start: int, end: int, key_max_gap: int):
 
 
 def analyze_key_frames(
-    png_dir, mask_dir, key_max_gap, size_threshold, mask_size_threshold, is_invert_mask
+    png_dir, mask_dir, key_max_gap, size_threshold, mask_size_threshold, org_key_path,
 ):
     # correct = [(1, 33), (34, 69), (70, 76), (77, 101), (102, 111), (112, 118), (119, 125)]
     keys = []
@@ -60,12 +67,12 @@ def analyze_key_frames(
         ):
             # this frame begins new sequence
             print("seq_start", int(seq_start), "seq_end", int(frames[i - 1].stem))
-            save_sequence(seq_start, frames[i - 1].stem)
+            save_sequence(int(seq_start), int(frames[i - 1].stem), key_max_gap, org_key_path, png_dir)
             seq_start = frame.stem
         prev_img_size = im_size
         prev_mask_size = mask_size
 
-    keys.append((seq_start, frames[-1].stem))
+    save_sequence(int(seq_start), int(frames[-1].stem), key_max_gap, org_key_path, png_dir)
     return keys
 
 
@@ -87,7 +94,6 @@ def ebsynth_utility_stage2(
     key_max_gap,
     size_threshold,
     mask_size_threshold,
-    is_invert_mask,
 ):
     dbg.print("stage2")
     dbg.print("")
@@ -103,7 +109,7 @@ def ebsynth_utility_stage2(
         key_max_gap,
         size_threshold,
         mask_size_threshold,
-        is_invert_mask,
+        org_key_path,
     )
 
     dbg.print("keys : " + str(keys))

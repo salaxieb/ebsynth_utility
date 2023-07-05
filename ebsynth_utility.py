@@ -171,7 +171,6 @@ def ebsynth_utility_process(
             key_max_gap,
             size_threshold,
             mask_size_threshold,
-            False,
         )
         ebsynth_utility_stage2(
             dbg,
@@ -182,7 +181,6 @@ def ebsynth_utility_process(
             key_max_gap,
             size_threshold,
             mask_size_threshold,
-            True,
         )
 
     if stage_index == 3:
