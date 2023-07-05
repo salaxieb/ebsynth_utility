@@ -5,6 +5,7 @@ import random
 import time
 import pprint
 import shutil
+from itertools import chain
 
 from modules.processing import process_images, Processed
 from modules.paths import models_path
@@ -1068,14 +1069,13 @@ class Script(scripts.Script):
             return pair_img
 
         sequences = org_key_path.glob("seq_*")
-        imgs = [
-            sorted(seq.glob("*.png"))[min(len(list(seq.glob("*.png"))) - 1, 1)]
-            for seq in sequences
-        ]
-        masks = [get_mask_of_img(i) for i in imgs]
-        controlnet_input_imgs = [get_controlnet_input_img(i) for i in imgs]
+        imgs = list(chain(*[seq.glob("*.png") for seq in sequences]))
+        masks = {img.name: get_mask_of_img(img) for img in imgs}
+        controlnet_input_imgs = {
+            img.name: get_controlnet_input_img(img) for img in imgs
+        }
 
-        for mask in masks:
+        for mask in masks.values():
             m = cv2.imread(str(mask)) if mask else None
             if m is not None:
                 if m.max() == 0:
@@ -1090,7 +1090,8 @@ class Script(scripts.Script):
         ######################
         # face crop
         face_coords_dict = {}
-        for img, mask in zip(imgs, masks):
+        for img in imgs:
+            mask = masks[img]
             face_detected = False
             if is_facecrop:
                 image = Image.open(str(img))
@@ -1135,7 +1136,9 @@ class Script(scripts.Script):
 
         ######################
         # img2img
-        for img, mask, controlnet_input_img in tzip(imgs, masks, controlnet_input_imgs):
+        for img in tqdm(imgs):
+            mask = masks[img.name]
+            controlnet_input_img = controlnet_input_imgs[img.name]
             face_coords = face_coords_dict[img.name]
             prompts = prompts_dict[img.name]
 
@@ -1230,7 +1233,7 @@ class Script(scripts.Script):
                     _p.image_mask = resized_mask
                     _p.seed += inc_seed
 
-            proc.images[0].save(str(img2img_key_path / img.name))
+            proc.images[0].save(str(img2img_key_path / img.parent / img.name))
 
         with open(project_dir / "param.txt", "w") as f:
             f.write(pprint.pformat(proc.info))

@@ -88,8 +88,8 @@ def ebsynth_utility_stage7_5(
     dbg.print("export_type: {}".format(export_type))
     dbg.print("fps: {}".format(fps))
 
-    front_frames = project_dir / "out"
-    back_frames = back_path / "out"
+    front_frames = project_dir / "crossfade"
+    back_frames = back_path / "crossfade"
 
     mixed_crossfade_path = project_dir / "front_back_crossfade_tmp"
     mixed_crossfade_path.mkdir(exist_ok=True)
@@ -109,7 +109,6 @@ def ebsynth_utility_stage7_5(
         ).convert("L")
 
         final_image = Image.composite(front_image, back_image, front_mask_image)
-
         final_image.save(str(mixed_crossfade_path / front_image_filename.name))
 
     ### create movie

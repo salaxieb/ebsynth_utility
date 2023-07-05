@@ -135,14 +135,14 @@ def on_ui_tabs():
                                         maximum=500,
                                         step=1,
                                         label="Minimum keyframe gap",
-                                        value=10,
+                                        value=0,
                                     )
                                     key_max_gap = gr.Slider(
                                         minimum=0,
                                         maximum=1000,
                                         step=1,
                                         label="Maximum keyframe gap",
-                                        value=300,
+                                        value=10,
                                     )
                                     key_th = gr.Slider(
                                         minimum=0.0,

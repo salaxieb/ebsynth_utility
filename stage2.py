@@ -14,8 +14,26 @@ def get_jpg_size(filename):
     return size
 
 
+def save_sequence(start: int, end: int, key_max_gap: int):
+    save_path = org_key_path / f"seq_{start}_{end}"
+    save_path.mkdir(exist_ok=True, parents=True)
+    filename = str(start).zfill(5) + ".png"
+    shutil.copy(frame_path / filename, save_path / filename)
+
+    # equally splitting whole range of images
+    steps = (end - start) // key_max_gap
+    step = (end - start) // steps
+
+    for mid in range(start, end, step):
+        filename = str(mid).zfill(5) + ".png"
+        shutil.copy(frame_path / filename, save_path / filename)
+
+    filename = str(end).zfill(5) + ".png"
+    shutil.copy(frame_path / filename, save_path / filename)
+
+
 def analyze_key_frames(
-    png_dir, mask_dir, size_threshold, mask_size_threshold,is_invert_mask
+    png_dir, mask_dir, key_max_gap, size_threshold, mask_size_threshold, is_invert_mask
 ):
     # correct = [(1, 33), (34, 69), (70, 76), (77, 101), (102, 111), (112, 118), (119, 125)]
     keys = []
@@ -41,14 +59,13 @@ def analyze_key_frames(
             )
         ):
             # this frame begins new sequence
-            keys.append((seq_start, frames[i - 1].stem))
             print("seq_start", int(seq_start), "seq_end", int(frames[i - 1].stem))
+            save_sequence(seq_start, frames[i - 1].stem)
             seq_start = frame.stem
         prev_img_size = im_size
         prev_mask_size = mask_size
 
     keys.append((seq_start, frames[-1].stem))
-
     return keys
 
 
@@ -67,6 +84,7 @@ def ebsynth_utility_stage2(
     frame_path,
     frame_mask_path,
     org_key_path,
+    key_max_gap,
     size_threshold,
     mask_size_threshold,
     is_invert_mask,
@@ -82,6 +100,7 @@ def ebsynth_utility_stage2(
     keys = analyze_key_frames(
         frame_path,
         frame_mask_path,
+        key_max_gap,
         size_threshold,
         mask_size_threshold,
         is_invert_mask,
@@ -103,7 +122,7 @@ def ebsynth_utility_stage2(
         shutil.copy(frame_path / filename, save_path / filename)
 
     dbg.print("")
-    dbg.print(f'Keyframes are output to [{org_key_path}]')
+    dbg.print(f"Keyframes are output to [{org_key_path}]")
     dbg.print("")
     dbg.print(
         "[Ebsynth Utility]->[configuration]->[stage 2]->[Threshold of delta frame edge]"

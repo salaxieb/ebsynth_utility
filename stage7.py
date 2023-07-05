@@ -6,37 +6,38 @@ import shutil
 import time
 import cv2
 import numpy as np
+
+from collections import defaultdict
+from typing import Tuple
+
+from pathlib import Path
 from natsort import natsorted
+
+from PIL import Image
+
+from stage6 import unhash_frame_name
 
 
 def clamp(n, smallest, largest):
     return sorted([smallest, n, largest])[1]
 
 
-def get_ext(export_type):
-    if export_type in ("mp4", "webm", "gif"):
-        return "." + export_type
-    else:
-        return ".avi"
+def search_out_frames(project_dir):
+    styles_frames = defaultdict(list)
+    for frame_path in (project_dir / "out").glob("*.png"):
+        frame_nb, key_fame_nb = unhash_frame_name(frame_path)
+        styled_frames[frame_nd].append((key_fame_nb, frame_path))
+    return styles_frames
 
 
-def trying_to_add_audio(original_movie_path, no_snd_movie_path, output_path, tmp_dir):
-    if original_movie_path.is_file():
-        sound_path = tmp_dir / "sound.mp4"
-        subprocess.call(
-            f"ffmpeg -i {original_movie_path} -vn -acodec copy {sound_path}", shell=True
-        )
-
-        if sound_path.is_file():
-            # ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 output.mp4
-
-            subprocess.call(
-                f"ffmpeg -i {no_snd_movie_path} -i {sound_path} -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 {output_path}",
-                shell=True,
-            )
-            return True
-
-    return False
+def weighted_sum(styles_with_weights: Tuple[float, Path]):
+    assert len(styles_with_weights) == 2
+    assert styles_with_weights[0][0] + styles_with_weights[1][0] == 1
+    
+    img_f = cv2.imread(str(styles_with_weights[0][1]))
+    img_b = cv2.imread(str(styles_with_weights[1][1]))
+            
+    return cv2.addWeighted(img_f, styles_with_weights[0][0], img_b, styles_with_weights[1][0], 0)
 
 
 def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
@@ -55,6 +56,32 @@ def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
 
     dbg.print("stage7")
     dbg.print("")
+    # crossfading
+
+    crossfade_folder = project_dir / "crossfade"
+    crossfade_folder.mkdir(exists_ok=True)
+
+    styled_frames_maping = search_out_frames(project_dir)
+
+    # style 3, style 14, frame 6
+    # (6 - 3) / (14 - 3) = 3 / 11
+    # 3/11 * style 3, 8/11 * style 14
+
+    for frame, styled_frames in styled_frames_maping.items():
+        # resulting image is weighted sum of two styled images
+        save_path = (crossfade_folder / str(frame).zfill(5)).with_suffix(".png")
+        styles_with_weights = []
+        for key_frame_nb, styled_image_path in styled_frames:
+            img = Image.open(str(styled_image_path))
+            styles_with_distances.append((abs(key_frame_nb - frame), img))
+
+        distances_sum = sum(distance for distances, img in styles_with_distances)
+        styles_with_weights = [
+            (distance / distances_sum, img) for distance, img in styles_with_distances
+        ]
+
+        resulting_image = weighted_sum(styles_with_weights)
+        resulting_image.save(str(save_path))
 
     dbg.print("")
     dbg.print("completed.")

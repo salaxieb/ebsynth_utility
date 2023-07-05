@@ -138,7 +138,9 @@ def ebsynth_utility_process(
     ]
 
     if stage_index == 0:
-        ebsynth_utility_stage0_5(dbg, project_dir, original_movie_path, target_fps)
+        original_movie_path = ebsynth_utility_stage0_5(
+            dbg, project_dir, original_movie_path, target_fps,
+        )
 
     if stage_index == 1:
         ebsynth_utility_stage1(
@@ -166,6 +168,7 @@ def ebsynth_utility_process(
             frame_path,
             frame_mask_path,
             org_key_path,
+            key_max_gap,
             size_threshold,
             mask_size_threshold,
             False,
@@ -176,6 +179,7 @@ def ebsynth_utility_process(
             frame_path,
             back_mask_path,
             back_org_key_path,
+            key_max_gap,
             size_threshold,
             mask_size_threshold,
             True,
@@ -199,27 +203,13 @@ def ebsynth_utility_process(
         dbg.print("1. Go to img2img tab")
         dbg.print("2. Select [ebsynth utility] in the script combo box")
         dbg.print(f'3. Fill in the "Project directory" field with [ {project_dir} ]')
-        dbg.print(
-            f"4. Select in the 'Mask Mode(Override img2img Mask mode)' field with [{'Invert' if is_invert_mask else 'Normal'}]"
-        )
-        dbg.print(
-            f'5. I recommend to fill in the "Width" field with [{img_width}]'
-        )
-        dbg.print(
-            f'6. I recommend to fill in the "Height" field with [{img_height}]'
-        )
-        dbg.print(
-            '7. I recommend to fill in the "Denoising strength" field with lower than 0.35'
-        )
-        dbg.print(
-            "   (When using controlnet together, you can put in large values (even 1.0 is possible).)"
-        )
-        dbg.print(
-            "8. Fill in the remaining configuration fields of img2img. No image and mask settings are required."
-        )
-        dbg.print(
-            "9. Drop any image onto the img2img main screen. This is necessary to avoid errors, but does not affect the results of img2img."
-        )
+        dbg.print(f"4. Select in the 'Mask Mode(Override img2img Mask mode)' field with [{'Invert' if is_invert_mask else 'Normal'}]")
+        dbg.print(f'5. I recommend to fill in the "Width" field with [{img_width}]')
+        dbg.print(f'6. I recommend to fill in the "Height" field with [{img_height}]')
+        dbg.print('7. I recommend to fill in the "Denoising strength" field with lower than 0.35')
+        dbg.print("   (When using controlnet together, you can put in large values (even 1.0 is possible).)")
+        dbg.print("8. Fill in the remaining configuration fields of img2img. No image and mask settings are required.")
+        dbg.print("9. Drop any image onto the img2img main screen. This is necessary to avoid errors, but does not affect the results of img2img.")
         dbg.print("10. Generate")
         dbg.print(f"(Images are output to [{img2img_key_path}])")
         dbg.print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
