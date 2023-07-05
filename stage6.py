@@ -17,7 +17,7 @@ def hash_frame_name(frame, key_frame):
 def unhash_frame_name(frame_name: Path):
     frame_name = str(frame_name.name)
     frame_nb = int(frame_name.split("_")[0])
-    key_frame_nb = int(frame_name.splie("_")[1])
+    key_frame_nb = int(frame_name.split("_")[1])
     return frame_nb, key_frame_nb
 
 
@@ -43,7 +43,7 @@ def run_ebsynth_for_frames(
     # out_dir = out_dir / f'out_{start}_{end}'
     # out_dir.mkdir(exist_ok=True)
 
-    for frame in tqdm(all_frames[frame_index(start, frames_path, all_frames): frame_index(end, frames_path, all_frames)]):
+    for frame in all_frames[frame_index(start, frames_path, all_frames): frame_index(end, frames_path, all_frames) + 1]:
         output_path = out_dir / hash_frame_name(frame, style_frame)
 
         print(f"frames: {int(frame.stem)} -> {int(end.stem) + 1}")

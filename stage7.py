@@ -23,11 +23,11 @@ def clamp(n, smallest, largest):
 
 
 def search_out_frames(project_dir):
-    styles_frames = defaultdict(list)
+    styled_frames = defaultdict(list)
     for frame_path in (project_dir / "out").glob("*.png"):
         frame_nb, key_fame_nb = unhash_frame_name(frame_path)
-        styled_frames[frame_nd].append((key_fame_nb, frame_path))
-    return styles_frames
+        styled_frames[frame_nb].append((key_fame_nb, frame_path))
+    return styled_frames
 
 
 def weighted_sum(styles_with_weights: Tuple[float, Path]):
@@ -36,7 +36,7 @@ def weighted_sum(styles_with_weights: Tuple[float, Path]):
     
     img_f = cv2.imread(str(styles_with_weights[0][1]))
     img_b = cv2.imread(str(styles_with_weights[1][1]))
-            
+
     return cv2.addWeighted(img_f, styles_with_weights[0][0], img_b, styles_with_weights[1][0], 0)
 
 
@@ -59,7 +59,7 @@ def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
     # crossfading
 
     crossfade_folder = project_dir / "crossfade"
-    crossfade_folder.mkdir(exists_ok=True)
+    crossfade_folder.mkdir(exist_ok=True)
 
     styled_frames_maping = search_out_frames(project_dir)
 
@@ -67,21 +67,18 @@ def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
     # (6 - 3) / (14 - 3) = 3 / 11
     # 3/11 * style 3, 8/11 * style 14
 
-    for frame, styled_frames in styled_frames_maping.items():
+    for frame, styled_frames in tqdm(styled_frames_maping.items()):
         # resulting image is weighted sum of two styled images
         save_path = (crossfade_folder / str(frame).zfill(5)).with_suffix(".png")
-        styles_with_weights = []
-        for key_frame_nb, styled_image_path in styled_frames:
-            img = Image.open(str(styled_image_path))
-            styles_with_distances.append((abs(key_frame_nb - frame), img))
+        styles_with_distances = [(abs(key_frame_nb - frame), styled_image_path) for key_frame_nb, styled_image_path in styled_frames]
 
-        distances_sum = sum(distance for distances, img in styles_with_distances)
+        distances_sum = sum(distance for distance, img_path in styles_with_distances)
         styles_with_weights = [
-            (distance / distances_sum, img) for distance, img in styles_with_distances
+            (distance / distances_sum, img_path) for distance, img_path in styles_with_distances
         ]
 
         resulting_image = weighted_sum(styles_with_weights)
-        resulting_image.save(str(save_path))
+        cv2.imwrite(str(save_path), resulting_image)
 
     dbg.print("")
     dbg.print("completed.")

@@ -91,9 +91,7 @@ def ebsynth_utility_process(
     project_dir = Path(project_dir)
     original_movie_path = Path(original_movie_path)
 
-    if not project_dir.is_dir():
-        dbg.print(f"{project_dir} project_dir not found")
-        return process_end(dbg, info)
+    project_dir.mkdir(exist_ok=True)
 
     if not original_movie_path.is_file():
         dbg.print(f"{original_movie_path} original_movie_path not found")
