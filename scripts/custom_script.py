@@ -21,7 +21,7 @@ import json
 import re
 from pathlib import Path
 from extensions.ebsynth_utility.calculator import CalcParser, ParseError
-from tqdm.contrib import tzip
+from tqdm import tqdm
 
 
 def get_my_dir():
@@ -1091,7 +1091,7 @@ class Script(scripts.Script):
         # face crop
         face_coords_dict = {}
         for img in imgs:
-            mask = masks[img]
+            mask = masks[img.name]
             face_detected = False
             if is_facecrop:
                 image = Image.open(str(img))
@@ -1233,7 +1233,8 @@ class Script(scripts.Script):
                     _p.image_mask = resized_mask
                     _p.seed += inc_seed
 
-            proc.images[0].save(str(img2img_key_path / img.parent / img.name))
+            (img2img_key_path / img.parent.stem).mkdir(exist_ok=True)
+            proc.images[0].save(str(img2img_key_path / img.parent.stem / img.name))
 
         with open(project_dir / "param.txt", "w") as f:
             f.write(pprint.pformat(proc.info))

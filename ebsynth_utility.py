@@ -229,7 +229,7 @@ def ebsynth_utility_process(
         sample_image = list(frame_path.glob("*.png"))[0]
         img_height, img_width, _ = cv2.imread(str(sample_image)).shape
 
-        sample_img2img_key = list(img2img_key_path.glob("*.png"))[0]
+        sample_img2img_key = list(img2img_key_path.glob("**/*.png"))[0]
         img_height_key, img_width_key, _ = cv2.imread(str(sample_img2img_key)).shape
 
         dbg.print("stage 4")

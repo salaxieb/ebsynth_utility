@@ -24,7 +24,7 @@ def path2framenum(path):
 
 
 def search_key_dir(key_dir):
-    frames = sorted(key_dir.glob("[0-9]*.png"))
+    frames = sorted(key_dir.glob("**/[0-9]*.png"))
 
     basename = frames[0].stem
 
@@ -197,7 +197,7 @@ def ebsynth_utility_stage5(
         if not img2img_key_path.is_dir():
             return
 
-        sample_img2img_key = list(img2img_key_path.glob("*.png"))[0]
+        sample_img2img_key = list(img2img_key_path.glob("**/*.png"))[0]
         img_height1, img_width1, _ = cv2.imread(str(sample_img2img_key)).shape
         sample_frame = list(frame_path.glob("*.png"))[0]
         img_height2, img_width2, _ = cv2.imread(str(sample_frame)).shape
