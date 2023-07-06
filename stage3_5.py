@@ -112,7 +112,7 @@ def ebsynth_utility_stage3_5(
             "{0} found -> Treat the images here as originals.".format(backup_path)
         )
 
-    org_imgs = sorted(backup_path.glob("*.png"))
+    org_imgs = sorted(backup_path.glob("**/*.png"))
     head_of_keyframe = org_imgs[0]
 
     # open ref img

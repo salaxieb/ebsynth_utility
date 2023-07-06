@@ -16,6 +16,7 @@ from natsort import natsorted
 from PIL import Image
 
 from stage6 import unhash_frame_name
+from tqdm import tqdm
 
 
 def clamp(n, smallest, largest):
@@ -31,13 +32,19 @@ def search_out_frames(project_dir):
 
 
 def weighted_sum(styles_with_weights: Tuple[float, Path]):
-    assert len(styles_with_weights) == 2
-    assert styles_with_weights[0][0] + styles_with_weights[1][0] == 1
+    if len(styles_with_weights) == 2:
+        if styles_with_weights[0][0] + styles_with_weights[1][0] > 1.05 or styles_with_weights[0][0] + styles_with_weights[1][0] < 0.95:
+            print('!!sum is not 1!!!', styles_with_weights)
+        
+        img_f = cv2.imread(str(styles_with_weights[0][1]))
+        img_b = cv2.imread(str(styles_with_weights[1][1]))
+        return cv2.addWeighted(img_f, styles_with_weights[0][0], img_b, styles_with_weights[1][0], 0)
     
-    img_f = cv2.imread(str(styles_with_weights[0][1]))
-    img_b = cv2.imread(str(styles_with_weights[1][1]))
-
-    return cv2.addWeighted(img_f, styles_with_weights[0][0], img_b, styles_with_weights[1][0], 0)
+    if len(styles_with_weights) == 1:
+        return cv2.imread(str(styles_with_weights[0][1]))
+    
+    max_weight = max(styles_with_weights, key=lambda x: x[0])
+    return cv2.imread(str(max_weight[1]))
 
 
 def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
@@ -74,7 +81,7 @@ def ebsynth_utility_stage7(dbg, project_dir, blend_rate):
 
         distances_sum = sum(distance for distance, img_path in styles_with_distances)
         styles_with_weights = [
-            (distance / distances_sum, img_path) for distance, img_path in styles_with_distances
+            ((1 - distance / distances_sum), img_path) if distances_sum != 0 else (1, img_path) for distance, img_path in styles_with_distances
         ]
 
         resulting_image = weighted_sum(styles_with_weights)

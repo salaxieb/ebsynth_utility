@@ -1,4 +1,5 @@
 import subprocess
+from subprocess import Popen
 
 from pathlib import Path
 from natsort import natsorted
@@ -42,18 +43,22 @@ def run_ebsynth_for_frames(
 
     # out_dir = out_dir / f'out_{start}_{end}'
     # out_dir.mkdir(exist_ok=True)
-
+    processes = []
     for frame in all_frames[frame_index(start, frames_path, all_frames): frame_index(end, frames_path, all_frames) + 1]:
         output_path = out_dir / hash_frame_name(frame, style_frame)
 
         print(f"frames: {int(frame.stem)} -> {int(end.stem) + 1}")
-        mask_image = Image.open(str(masks_path / frame.name))
+        if output_path.exists() and np.max(Image.open(str(output_path))) != 0:
+            continue
         # empty mask
+        mask_image = Image.open(str(masks_path / frame.name))
         if np.max(mask_image) == 0:
             # just copy image
             shutil.copy((frames_path / frame.name), (out_dir / frame.name))
+            continue
 
-        subprocess.run(
+        # subprocess.run(
+        p = Popen(
             [
                 "/home/ubuntu/ebsynth/bin/ebsynth",
                 # str(Path("C:") / "Users" / "ILDAR" / "Downloads" / "EbSynth-Beta-Win" / "EbSynth"),
@@ -75,6 +80,8 @@ def run_ebsynth_for_frames(
                 "cuda",
             ]
         )
+        processes.append(p)
+    return processes
 
 
 def ebsynth_utility_stage6(
@@ -97,6 +104,7 @@ def ebsynth_utility_stage6(
     out_dir = project_dir / f"out"
     out_dir.mkdir(exist_ok=True)
 
+    all_sub_processess = []
     for style_sequence in tqdm(key_style_frames):
         sequence_key_frames = natsorted(style_sequence.glob("*.png"))
         for i, frame in enumerate(sequence_key_frames):
@@ -109,9 +117,9 @@ def ebsynth_utility_stage6(
             if i < len(sequence_key_frames) - 1:
                 end = sequence_key_frames[i + 1]
 
-            print(start, frame, end)
+            # print(start, frame, end)
 
-            run_ebsynth_for_frames(
+            processess = run_ebsynth_for_frames(
                 start=start,
                 end=end,
                 all_frames=all_frames,
@@ -120,6 +128,15 @@ def ebsynth_utility_stage6(
                 masks_path=masks_path,
                 out_dir=out_dir,
             )
+            all_sub_processess += processess
+        if len(all_sub_processess) > 30:
+            for p in all_sub_processess:
+                p.wait()
+                all_sub_processess = []
+
+    for p in all_sub_processess:
+        p.wait()
+        all_sub_processess = []
 
     dbg.print("")
     dbg.print("completed.")
