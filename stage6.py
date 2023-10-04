@@ -48,6 +48,7 @@ def run_ebsynth_for_frames(
         output_path = out_dir / hash_frame_name(frame, style_frame)
 
         print(f"frames: {int(frame.stem)} -> {int(end.stem) + 1}")
+        # check correct work of ebsynth
         if output_path.exists() and np.max(Image.open(str(output_path))) != 0:
             continue
         # empty mask
@@ -104,6 +105,19 @@ def ebsynth_utility_stage6(
     out_dir = project_dir / f"out"
     out_dir.mkdir(exist_ok=True)
 
+    # launch first time with single image to warm up
+    processess = run_ebsynth_for_frames(
+        start=all_frames[0],
+        end=all_frames[1],
+        all_frames=all_frames,
+        style_frame=natsorted(key_style_frames[0].glob("*.png"))[0],
+        frames_path=frames_path,
+        masks_path=masks_path,
+        out_dir=out_dir,
+    )
+    for p in processess:
+        p.wait()
+
     all_sub_processess = []
     for style_sequence in tqdm(key_style_frames):
         sequence_key_frames = natsorted(style_sequence.glob("*.png"))
@@ -129,7 +143,7 @@ def ebsynth_utility_stage6(
                 out_dir=out_dir,
             )
             all_sub_processess += processess
-        if len(all_sub_processess) > 30:
+        if len(all_sub_processess) > 20:
             for p in all_sub_processess:
                 p.wait()
                 all_sub_processess = []
